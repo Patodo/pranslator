@@ -1,0 +1,243 @@
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 12px;
+  box-sizing: border-box;
+}
+
+.tab-header {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 8px;
+}
+
+.tab-header button {
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  color: #666;
+  font-size: 14px;
+  cursor: pointer;
+  border-radius: 4px 4px 0 0;
+  transition: all 0.2s;
+  box-shadow: none;
+}
+
+.tab-header button:hover {
+  color: #333;
+  background: #f0f0f0;
+}
+
+.tab-header button.active {
+  color: #1890ff;
+  border-bottom: 2px solid #1890ff;
+  font-weight: 500;
+}
+
+.tab-content {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Translation Panel */
+.translation-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  gap: 12px;
+}
+
+.input-section,
+.output-section {
+  flex: 1;
+  display: flex;
+  min-height: 120px;
+}
+
+.translation-panel textarea {
+  width: 100%;
+  height: 100%;
+  padding: 10px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  font-size: 14px;
+  resize: none;
+  font-family: inherit;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+.translation-panel textarea:focus {
+  outline: none;
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.translation-panel textarea::placeholder {
+  color: #bfbfbf;
+}
+
+.button-section {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.button-section button {
+  padding: 8px 16px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: none;
+}
+
+.button-section button:first-child {
+  background: #1890ff;
+  border-color: #1890ff;
+  color: #fff;
+}
+
+.button-section button:first-child:hover:not(:disabled) {
+  background: #40a9ff;
+  border-color: #40a9ff;
+}
+
+.button-section button:not(:first-child):hover:not(:disabled) {
+  color: #1890ff;
+  border-color: #1890ff;
+}
+
+.button-section button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.error-message {
+  color: #ff4d4f;
+  font-size: 12px;
+  padding: 8px;
+  background: #fff2f0;
+  border: 1px solid #ffccc7;
+  border-radius: 4px;
+}
+
+/* Settings Panel */
+.settings-panel {
+  padding: 16px;
+}
+
+.settings-panel h3 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  color: #333;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.settings-panel > button {
+  width: 100%;
+  padding: 10px;
+  background: #1890ff;
+  border: none;
+  border-radius: 6px;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+  box-shadow: none;
+}
+
+.settings-panel > button:hover {
+  background: #40a9ff;
+}
+
+.loading {
+  text-align: center;
+  color: #666;
+  padding: 20px;
+}
+
+/* Dark mode */
+@media (prefers-color-scheme: dark) {
+  .tab-header {
+    border-bottom-color: #434343;
+  }
+
+  .tab-header button {
+    color: #aaa;
+  }
+
+  .tab-header button:hover {
+    color: #ddd;
+    background: #333;
+  }
+
+  .tab-header button.active {
+    color: #40a9ff;
+    border-bottom-color: #40a9ff;
+  }
+
+  .translation-panel textarea,
+  .form-group input {
+    background: #1f1f1f;
+    border-color: #434343;
+    color: #f0f0f0;
+  }
+
+  .translation-panel textarea:focus,
+  .form-group input:focus {
+    border-color: #40a9ff;
+    box-shadow: 0 0 0 2px rgba(64, 169, 255, 0.2);
+  }
+
+  .button-section button:not(:first-child) {
+    background: #1f1f1f;
+    color: #f0f0f0;
+  }
+
+  .button-section button:not(:first-child):hover:not(:disabled) {
+    border-color: #40a9ff;
+    color: #40a9ff;
+  }
+
+  .error-message {
+    background: #2a1215;
+    border-color: #58181c;
+    color: #ffa39e;
+  }
+
+  .settings-panel h3,
+  .form-group label {
+    color: #f0f0f0;
+  }
+}
