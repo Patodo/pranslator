@@ -34,10 +34,9 @@ npm run tauri build
 
 ## Configuration
 
-The app stores settings in:
-- **Windows**: `%APPDATA%/pranslator/settings.toml`
-- **macOS**: `~/Library/Application Support/pranslator/settings.toml`
-- **Linux**: `~/.config/pranslator/settings.toml`
+The app stores settings in `~/.config/pranslator/settings.toml` (where `~` is your home directory).
+
+For development, see [DEVELOPMENT.md](./DEVELOPMENT.md) to configure a separate config path.
 
 ### Example settings.toml
 

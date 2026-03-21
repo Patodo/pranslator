@@ -35,9 +35,17 @@ impl Default for Settings {
 
 impl Settings {
     pub fn config_dir() -> Result<PathBuf> {
-        let config_dir = dirs::config_dir()
-            .ok_or_else(|| anyhow::anyhow!("Could not find config directory"))?
-            .join("pranslator");
+        // 优先读取环境变量（开发模式）
+        if let Ok(custom_path) = std::env::var("PRANSLATOR_CONFIG_PATH") {
+            let config_dir = PathBuf::from(custom_path);
+            fs::create_dir_all(&config_dir)?;
+            return Ok(config_dir);
+        }
+
+        // 默认路径: ~/.config/pranslator/
+        let home = dirs::home_dir()
+            .ok_or_else(|| anyhow::anyhow!("Could not find home directory"))?;
+        let config_dir = home.join(".config").join("pranslator");
         fs::create_dir_all(&config_dir)?;
         Ok(config_dir)
     }
