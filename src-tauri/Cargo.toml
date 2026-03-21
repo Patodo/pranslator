@@ -1,6 +1,6 @@
 [package]
 name = "pranslator"
-version = "0.1.0"
+version = "0.0.1"
 description = "English Assistant Translation App"
 authors = ["you"]
 edition = "2021"
