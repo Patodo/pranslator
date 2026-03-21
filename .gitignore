@@ -43,3 +43,5 @@ $RECYCLE.BIN/
 
 # Tauri
 src-tauri/target/
+
+.claude
