@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { translate } from '../api/translate';
 
 export type TranslationStatus = 'idle' | 'loading' | 'success' | 'error';
@@ -80,8 +80,24 @@ export function TranslationView({
   handleKeyDown: (e: React.KeyboardEvent) => void;
 }) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const outputRef = useRef<HTMLTextAreaElement>(null);
+  const [allowOutputFocus, setAllowOutputFocus] = useState(false);
 
   useEffect(() => {
+    const el = inputRef.current;
+    if (el) {
+      el.focus();
+      el.selectionStart = el.selectionEnd = el.value.length;
+    }
+  }, []);
+
+  const handleOutputDoubleClick = useCallback(() => {
+    setAllowOutputFocus(true);
+    setTimeout(() => outputRef.current?.focus(), 0);
+  }, []);
+
+  const handleOutputBlur = useCallback(() => {
+    setAllowOutputFocus(false);
     const el = inputRef.current;
     if (el) {
       el.focus();
@@ -115,6 +131,7 @@ export function TranslationView({
           onChange={(e) => setInputText(e.target.value)}
           onKeyDown={handleKeyDown}
           onBlur={() => {
+            if (allowOutputFocus) return;
             const el = inputRef.current;
             if (el) {
               el.focus();
@@ -128,11 +145,14 @@ export function TranslationView({
 
       <div className="output-section">
         <textarea
+          ref={outputRef}
           className={getOutputClass()}
           value={getOutputValue()}
           readOnly
           placeholder={getPlaceholder()}
           rows={6}
+          onDoubleClick={handleOutputDoubleClick}
+          onBlur={handleOutputBlur}
         />
       </div>
     </div>
