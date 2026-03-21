@@ -58,7 +58,7 @@ Frontend calls Rust backend via Tauri's `invoke()`:
 Never try to start a dev server in your backstage, I will start it manually.
 
 ### Check After Modify
-When finish a task, run Linting, Formatting and `cargo check` to ensure your change do not introduce warnings or syntax issues.
+When finish a task, run Linting, Formatting and `cargo check` to ensure your change do not introduce warnings or syntax issues, if exist, fix it until theree are no issues.
 
 ### Custom Hook Pattern
 `TranslationPanel()` is a custom hook that returns state and handlers, separating logic from rendering (`TranslationView`).

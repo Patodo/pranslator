@@ -22,6 +22,75 @@ body {
   height: 100vh;
   padding: 12px;
   box-sizing: border-box;
+  background: #fff;
+}
+
+.app-container.transitioning-out,
+.app-container.transitioning-in,
+.app-container.settings {
+  background: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+  .app-container {
+    background: #141414;
+  }
+
+  .app-container.transitioning-out,
+  .app-container.transitioning-in,
+  .app-container.settings {
+    background: #141414;
+  }
+}
+
+.page-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  opacity: 1;
+}
+
+.page-wrapper.fade-out {
+  animation: fadeOut 0.2s ease-out forwards;
+}
+
+.page-wrapper.slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+.page-wrapper.slide-out {
+  animation: slideOut 0.2s ease-in forwards;
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideOut {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(30px);
+  }
 }
 
 .toolbar {
@@ -397,12 +466,6 @@ body {
   right: 0;
   font-size: 12px;
   color: #ff4d4f;
-}
-
-.loading {
-  text-align: center;
-  color: #666;
-  padding: 20px;
 }
 
 /* Dark mode */

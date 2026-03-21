@@ -58,8 +58,7 @@ export function SettingsPanel() {
     }
   };
 
-  if (isLoading) return <div className="loading">Loading settings...</div>;
-  if (!localSettings) return <div className="loading">No settings available</div>;
+  if (isLoading || !localSettings) return null;
 
   return (
     <div className="settings-panel">

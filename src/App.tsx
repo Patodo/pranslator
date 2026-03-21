@@ -1,11 +1,14 @@
-import { useState } from 'react';
-import { ArrowLeft, Settings, ArrowRightLeft, Trash2, Languages } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Settings, ArrowRightLeft, Trash2, Languages } from 'lucide-react';
+import { listen } from '@tauri-apps/api/event';
 import { TranslationPanel, TranslationView } from './components/TranslationPanel';
 import { SettingsPanel } from './components/SettingsPanel';
 import './App.css';
 
+type PageState = 'home' | 'settings' | 'settings-to-home';
+
 function App() {
-  const [showSettings, setShowSettings] = useState(false);
+  const [pageState, setPageState] = useState<PageState>('home');
   const {
     inputText,
     outputText,
@@ -19,23 +22,50 @@ function App() {
     handleKeyDown,
   } = TranslationPanel();
 
+  const goToSettings = () => {
+    setPageState('settings');
+  };
+
+  const goToHome = () => {
+    setPageState('settings-to-home');
+  };
+
+  // Reset to home page when window is shown via shortcut
+  useEffect(() => {
+    const unlisten = listen('reset-to-home', () => {
+      setPageState('home');
+    });
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, []);
+
+  useEffect(() => {
+    if (pageState === 'settings-to-home') {
+      const timer = setTimeout(() => setPageState('home'), 200);
+      return () => clearTimeout(timer);
+    }
+  }, [pageState]);
+
+  const showSettings = pageState !== 'home';
+
   return (
-    <main className="app-container">
+    <main className={`app-container ${pageState}`}>
       {showSettings ? (
-        <>
+        <div className={`page-wrapper ${pageState === 'settings' ? 'slide-in' : 'slide-out'}`}>
           <div className="toolbar">
-            <button className="icon-btn" onClick={() => setShowSettings(false)}>
-              <ArrowLeft size={20} />
-            </button>
-            <h2>Settings</h2>
             <div className="header-spacer" />
+            <h2>Settings</h2>
+            <button className="icon-btn" onClick={goToHome}>
+              <X size={20} />
+            </button>
           </div>
           <div className="page-content">
             <SettingsPanel />
           </div>
-        </>
+        </div>
       ) : (
-        <>
+        <div className="page-wrapper">
           <div className="toolbar">
             <div className="toolbar-left">
               <button
@@ -58,7 +88,7 @@ function App() {
                 <Trash2 size={18} />
               </button>
             </div>
-            <button className="icon-btn" onClick={() => setShowSettings(true)} title="Settings">
+            <button className="icon-btn" onClick={goToSettings} title="Settings">
               <Settings size={20} />
             </button>
           </div>
@@ -72,7 +102,7 @@ function App() {
               handleKeyDown={handleKeyDown}
             />
           </div>
-        </>
+        </div>
       )}
     </main>
   );

@@ -5,7 +5,7 @@ mod llm;
 use std::sync::Mutex;
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{MouseButton, TrayIconBuilder, TrayIconEvent};
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -27,9 +27,13 @@ pub fn run() {
                             // Window is hidden, show and focus it
                             let _ = window.show();
                             let _ = window.set_focus();
+                            // Emit event to reset to home page
+                            let _ = app.emit("reset-to-home", ());
                         } else if !is_focused {
                             // Window is visible but not focused, just focus it
                             let _ = window.set_focus();
+                            // Emit event to reset to home page
+                            let _ = app.emit("reset-to-home", ());
                         } else {
                             // Window is visible and focused, hide it
                             let _ = window.hide();
