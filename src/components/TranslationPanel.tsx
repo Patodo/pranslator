@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { translate } from '../api/translate';
 
 export type TranslationStatus = 'idle' | 'loading' | 'success' | 'error';
@@ -79,6 +79,16 @@ export function TranslationView({
   setInputText: (text: string) => void;
   handleKeyDown: (e: React.KeyboardEvent) => void;
 }) {
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    const el = inputRef.current;
+    if (el) {
+      el.focus();
+      el.selectionStart = el.selectionEnd = el.value.length;
+    }
+  }, []);
+
   const getOutputClass = () => {
     if (status === 'loading') return 'output-loading';
     if (status === 'error') return 'output-error';
@@ -100,9 +110,17 @@ export function TranslationView({
     <div className="translation-panel">
       <div className="input-section">
         <textarea
+          ref={inputRef}
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
           onKeyDown={handleKeyDown}
+          onBlur={() => {
+            const el = inputRef.current;
+            if (el) {
+              el.focus();
+              el.selectionStart = el.selectionEnd = el.value.length;
+            }
+          }}
           placeholder="Enter text to translate (Ctrl+Enter to translate)"
           rows={6}
         />
