@@ -88,6 +88,36 @@ pnpm lint
 pnpm lint:fix
 ```
 
+## Git 提交规范
+
+提交信息遵循 [Conventional Commits](https://www.conventionalcommits.org/) 规范：
+
+```
+type(scope): description
+```
+
+**常用 type：**
+
+| Type | 说明 |
+|------|------|
+| `feat` | 新功能 |
+| `fix` | 修复 bug |
+| `docs` | 文档更新 |
+| `refactor` | 代码重构 |
+| `test` | 测试相关 |
+| `chore` | 构建/工具/杂项 |
+
+**scope（可选）：** 指明影响范围，如 `config`、`ui`、`api` 等。
+
+**示例：**
+
+```
+feat(ui): 添加深色模式支持
+fix(api): 修复请求超时处理
+docs: 更新安装说明
+chore(config): 支持环境变量自定义配置路径
+```
+
 ## IDE 推荐
 
 - [VS Code](https://code.visualstudio.com/)
