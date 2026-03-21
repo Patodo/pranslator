@@ -11,6 +11,7 @@ function App() {
     outputText,
     isLoading,
     status,
+    successState,
     setInputText,
     handleTranslate,
     handleSwap,
@@ -71,6 +72,7 @@ function App() {
               inputText={inputText}
               outputText={outputText}
               status={status}
+              successState={successState}
               setInputText={setInputText}
               handleKeyDown={handleKeyDown}
             />

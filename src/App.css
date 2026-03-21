@@ -143,16 +143,40 @@ body {
 }
 
 /* Output states */
+@keyframes breathing {
+  0%, 100% {
+    background: #e6f7ff;
+    border-color: #91d5ff;
+  }
+  50% {
+    background: #bae7ff;
+    border-color: #69c0ff;
+  }
+}
+
 .translation-panel textarea.output-loading {
-  background: #e6f7ff;
-  border-color: #91d5ff;
-  color: #1890ff;
+  animation: breathing 2s ease-in-out infinite;
+}
+
+.translation-panel textarea.output-loading::placeholder {
+  color: #999;
 }
 
 .translation-panel textarea.output-error {
   background: #fff2f0;
   border-color: #ffccc7;
   color: #ff4d4f;
+}
+
+.translation-panel textarea.output-success {
+  background-color: rgba(135, 208, 104, 0.4);
+  border-color: rgba(135, 208, 104, 0.6);
+  transition: background-color 0.75s ease-out, border-color 0.75s ease-out;
+}
+
+.translation-panel textarea.output-success.fade-out {
+  background-color: transparent;
+  border-color: #d9d9d9;
 }
 
 /* Settings Panel */
@@ -190,6 +214,13 @@ body {
   outline: none;
   border-color: #1890ff;
   box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.form-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #999;
 }
 
 .settings-panel > button {
@@ -242,10 +273,34 @@ body {
     box-shadow: 0 0 0 2px rgba(64, 169, 255, 0.2);
   }
 
+  @keyframes breathing-dark {
+    0%, 100% {
+      background: #111d2c;
+      border-color: #15395b;
+    }
+    50% {
+      background: #112a45;
+      border-color: #154c83;
+    }
+  }
+
   .translation-panel textarea.output-loading {
-    background: #111d2c;
-    border-color: #15395b;
-    color: #40a9ff;
+    animation: breathing-dark 2s ease-in-out infinite;
+  }
+
+  .translation-panel textarea.output-loading::placeholder {
+    color: #666;
+  }
+
+  .translation-panel textarea.output-success {
+    background-color: rgba(135, 208, 104, 0.2);
+    border-color: rgba(135, 208, 104, 0.35);
+    transition: background-color 0.75s ease-out, border-color 0.75s ease-out;
+  }
+
+  .translation-panel textarea.output-success.fade-out {
+    background-color: transparent;
+    border-color: #434343;
   }
 
   .translation-panel textarea.output-error {
@@ -257,5 +312,9 @@ body {
   .settings-panel h3,
   .form-group label {
     color: #f0f0f0;
+  }
+
+  .form-hint {
+    color: #666;
   }
 }

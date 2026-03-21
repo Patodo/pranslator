@@ -60,6 +60,9 @@ export function SettingsPanel() {
           onChange={(e) => handleChange('api_base', e.target.value)}
           placeholder="https://api.openai.com/v1"
         />
+        <span className="form-hint">
+          {localSettings.llm.api_base.replace(/\/+$/, '')}/chat/completions
+        </span>
       </div>
 
       <div className="form-group">

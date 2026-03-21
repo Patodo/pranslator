@@ -8,17 +8,22 @@ export function TranslationPanel() {
   const [outputText, setOutputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState<TranslationStatus>('idle');
+  const [successState, setSuccessState] = useState<'none' | 'show' | 'fade'>('none');
 
   const handleTranslate = async () => {
     if (!inputText.trim()) return;
 
     setIsLoading(true);
     setStatus('loading');
+    setOutputText('');
 
     try {
       const result = await translate({ text: inputText });
       setOutputText(result.translated_text);
       setStatus('success');
+      setSuccessState('show');
+      setTimeout(() => setSuccessState('fade'), 50);
+      setTimeout(() => setSuccessState('none'), 850);
     } catch (err) {
       setOutputText(String(err));
       setStatus('error');
@@ -50,6 +55,7 @@ export function TranslationPanel() {
     outputText,
     isLoading,
     status,
+    successState,
     setInputText,
     handleTranslate,
     handleSwap,
@@ -62,24 +68,32 @@ export function TranslationView({
   inputText,
   outputText,
   status,
+  successState,
   setInputText,
   handleKeyDown,
 }: {
   inputText: string;
   outputText: string;
   status: TranslationStatus;
+  successState: 'none' | 'show' | 'fade';
   setInputText: (text: string) => void;
   handleKeyDown: (e: React.KeyboardEvent) => void;
 }) {
   const getOutputClass = () => {
     if (status === 'loading') return 'output-loading';
     if (status === 'error') return 'output-error';
+    if (successState === 'show') return 'output-success';
+    if (successState === 'fade') return 'output-success fade-out';
     return '';
   };
 
   const getOutputValue = () => {
-    if (status === 'loading') return 'Translating...';
     return outputText;
+  };
+
+  const getPlaceholder = () => {
+    if (status === 'loading') return 'Translating...';
+    return 'Translation result will appear here...';
   };
 
   return (
@@ -99,7 +113,7 @@ export function TranslationView({
           className={getOutputClass()}
           value={getOutputValue()}
           readOnly
-          placeholder="Translation result will appear here..."
+          placeholder={getPlaceholder()}
           rows={6}
         />
       </div>
