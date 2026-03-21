@@ -4,8 +4,13 @@ export interface LlmSettings {
   model: string;
 }
 
+export interface ShortcutSettings {
+  toggle_window: string;
+}
+
 export interface Settings {
   llm: LlmSettings;
+  shortcuts: ShortcutSettings;
 }
 
 export interface TranslateRequest {

@@ -21,14 +21,29 @@ impl Default for LlmSettings {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ShortcutSettings {
+    pub toggle_window: String,
+}
+
+impl Default for ShortcutSettings {
+    fn default() -> Self {
+        Self {
+            toggle_window: "Alt+Shift+T".to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Settings {
     pub llm: LlmSettings,
+    pub shortcuts: ShortcutSettings,
 }
 
 impl Default for Settings {
     fn default() -> Self {
         Self {
             llm: LlmSettings::default(),
+            shortcuts: ShortcutSettings::default(),
         }
     }
 }
@@ -58,7 +73,17 @@ impl Settings {
         let path = Self::config_path()?;
         if path.exists() {
             let content = fs::read_to_string(&path)?;
-            let settings: Settings = toml::from_str(&content)?;
+            // Try to parse, fallback to default for missing fields
+            let settings: Settings = toml::from_str(&content).unwrap_or_else(|_| {
+                // Merge with defaults if parsing fails (e.g., missing new fields)
+                let defaults = Settings::default();
+                Settings {
+                    llm: toml::from_str(&content)
+                        .map(|s: LlmSettings| s)
+                        .unwrap_or(defaults.llm),
+                    shortcuts: defaults.shortcuts,
+                }
+            });
             Ok(settings)
         } else {
             let settings = Settings::default();

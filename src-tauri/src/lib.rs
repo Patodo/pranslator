@@ -6,15 +6,48 @@ use std::sync::Mutex;
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{MouseButton, TrayIconBuilder, TrayIconEvent};
 use tauri::Manager;
+use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .plugin(
+            tauri_plugin_global_shortcut::Builder::new()
+                .with_handler(|app, _shortcut, event| {
+                    // Only handle on Press, ignore Release
+                    if event.state() != tauri_plugin_global_shortcut::ShortcutState::Pressed {
+                        return;
+                    }
+                    // Toggle window on shortcut trigger
+                    if let Some(window) = app.get_webview_window("main") {
+                        let is_visible = window.is_visible().unwrap_or(false);
+                        let is_focused = window.is_focused().unwrap_or(false);
+
+                        if !is_visible {
+                            // Window is hidden, show and focus it
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        } else if !is_focused {
+                            // Window is visible but not focused, just focus it
+                            let _ = window.set_focus();
+                        } else {
+                            // Window is visible and focused, hide it
+                            let _ = window.hide();
+                        }
+                    }
+                })
+                .build(),
+        )
         .plugin(tauri_plugin_clipboard_manager::init())
         .setup(|app| {
             // Load settings
             let settings = config::Settings::load().expect("Failed to load settings");
+
+            // Register global shortcut for toggle window
+            if let Ok(shortcut) = settings.shortcuts.toggle_window.parse::<Shortcut>() {
+                let _ = app.global_shortcut().register(shortcut);
+            }
+
             app.manage(Mutex::new(settings));
 
             // Intercept window close event - minimize to tray instead of closing
