@@ -15,11 +15,13 @@ function App() {
     isLoading,
     status,
     successState,
+    copyState,
     setInputText,
     handleTranslate,
     handleSwap,
     handleClear,
     handleKeyDown,
+    handleCopy,
   } = TranslationPanel();
 
   const goToSettings = () => {
@@ -98,8 +100,10 @@ function App() {
               outputText={outputText}
               status={status}
               successState={successState}
+              copyState={copyState}
               setInputText={setInputText}
               handleKeyDown={handleKeyDown}
+              handleCopy={handleCopy}
             />
           </div>
         </div>
