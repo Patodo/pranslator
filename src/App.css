@@ -1,3 +1,21 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  height: 100%;
+}
+
+/* Hide scrollbar for all browsers */
+::-webkit-scrollbar {
+  display: none;
+}
+
+* {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
 .app-container {
   display: flex;
   flex-direction: column;
@@ -6,40 +24,84 @@
   box-sizing: border-box;
 }
 
-.tab-header {
+.toolbar {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 12px;
-  border-bottom: 1px solid #e0e0e0;
-  padding-bottom: 8px;
+  gap: 8px;
 }
 
-.tab-header button {
-  padding: 8px 16px;
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toolbar h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  flex: 1;
+  text-align: center;
+}
+
+.header-spacer {
+  width: 32px;
+}
+
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  padding: 6px;
   border: none;
   background: transparent;
-  color: #666;
-  font-size: 14px;
+  border-radius: 6px;
   cursor: pointer;
-  border-radius: 4px 4px 0 0;
-  transition: all 0.2s;
-  box-shadow: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+  color: #666;
 }
 
-.tab-header button:hover {
-  color: #333;
+.icon-btn:hover:not(:disabled) {
   background: #f0f0f0;
 }
 
-.tab-header button.active {
-  color: #1890ff;
-  border-bottom: 2px solid #1890ff;
-  font-weight: 500;
+.icon-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
-.tab-content {
+.primary-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  background: #1890ff;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.primary-btn:hover:not(:disabled) {
+  background: #40a9ff;
+}
+
+.primary-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-content {
   flex: 1;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Translation Panel */
@@ -80,56 +142,22 @@
   color: #bfbfbf;
 }
 
-.button-section {
-  display: flex;
-  gap: 8px;
-  justify-content: center;
-}
-
-.button-section button {
-  padding: 8px 16px;
-  border: 1px solid #d9d9d9;
-  border-radius: 6px;
-  background: #fff;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: none;
-}
-
-.button-section button:first-child {
-  background: #1890ff;
-  border-color: #1890ff;
-  color: #fff;
-}
-
-.button-section button:first-child:hover:not(:disabled) {
-  background: #40a9ff;
-  border-color: #40a9ff;
-}
-
-.button-section button:not(:first-child):hover:not(:disabled) {
+/* Output states */
+.translation-panel textarea.output-loading {
+  background: #e6f7ff;
+  border-color: #91d5ff;
   color: #1890ff;
-  border-color: #1890ff;
 }
 
-.button-section button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.error-message {
-  color: #ff4d4f;
-  font-size: 12px;
-  padding: 8px;
+.translation-panel textarea.output-error {
   background: #fff2f0;
-  border: 1px solid #ffccc7;
-  border-radius: 4px;
+  border-color: #ffccc7;
+  color: #ff4d4f;
 }
 
 /* Settings Panel */
 .settings-panel {
-  padding: 16px;
+  padding: 0;
 }
 
 .settings-panel h3 {
@@ -189,22 +217,16 @@
 
 /* Dark mode */
 @media (prefers-color-scheme: dark) {
-  .tab-header {
-    border-bottom-color: #434343;
-  }
-
-  .tab-header button {
+  .icon-btn {
     color: #aaa;
   }
 
-  .tab-header button:hover {
-    color: #ddd;
+  .icon-btn:hover:not(:disabled) {
     background: #333;
   }
 
-  .tab-header button.active {
-    color: #40a9ff;
-    border-bottom-color: #40a9ff;
+  .toolbar h2 {
+    color: #f0f0f0;
   }
 
   .translation-panel textarea,
@@ -220,17 +242,13 @@
     box-shadow: 0 0 0 2px rgba(64, 169, 255, 0.2);
   }
 
-  .button-section button:not(:first-child) {
-    background: #1f1f1f;
-    color: #f0f0f0;
-  }
-
-  .button-section button:not(:first-child):hover:not(:disabled) {
-    border-color: #40a9ff;
+  .translation-panel textarea.output-loading {
+    background: #111d2c;
+    border-color: #15395b;
     color: #40a9ff;
   }
 
-  .error-message {
+  .translation-panel textarea.output-error {
     background: #2a1215;
     border-color: #58181c;
     color: #ffa39e;

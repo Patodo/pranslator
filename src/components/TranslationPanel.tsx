@@ -1,24 +1,27 @@
 import { useState } from 'react';
 import { translate } from '../api/translate';
 
+export type TranslationStatus = 'idle' | 'loading' | 'success' | 'error';
+
 export function TranslationPanel() {
   const [inputText, setInputText] = useState('');
   const [outputText, setOutputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<TranslationStatus>('idle');
 
   const handleTranslate = async () => {
     if (!inputText.trim()) return;
 
     setIsLoading(true);
-    setError(null);
+    setStatus('loading');
 
     try {
       const result = await translate({ text: inputText });
       setOutputText(result.translated_text);
+      setStatus('success');
     } catch (err) {
-      setError(String(err));
-      setOutputText('');
+      setOutputText(String(err));
+      setStatus('error');
     } finally {
       setIsLoading(false);
     }
@@ -33,12 +36,50 @@ export function TranslationPanel() {
   const handleSwap = () => {
     setInputText(outputText);
     setOutputText('');
+    setStatus('idle');
   };
 
   const handleClear = () => {
     setInputText('');
     setOutputText('');
-    setError(null);
+    setStatus('idle');
+  };
+
+  return {
+    inputText,
+    outputText,
+    isLoading,
+    status,
+    setInputText,
+    handleTranslate,
+    handleSwap,
+    handleClear,
+    handleKeyDown,
+  };
+}
+
+export function TranslationView({
+  inputText,
+  outputText,
+  status,
+  setInputText,
+  handleKeyDown,
+}: {
+  inputText: string;
+  outputText: string;
+  status: TranslationStatus;
+  setInputText: (text: string) => void;
+  handleKeyDown: (e: React.KeyboardEvent) => void;
+}) {
+  const getOutputClass = () => {
+    if (status === 'loading') return 'output-loading';
+    if (status === 'error') return 'output-error';
+    return '';
+  };
+
+  const getOutputValue = () => {
+    if (status === 'loading') return 'Translating...';
+    return outputText;
   };
 
   return (
@@ -53,23 +94,10 @@ export function TranslationPanel() {
         />
       </div>
 
-      <div className="button-section">
-        <button onClick={handleTranslate} disabled={isLoading || !inputText.trim()}>
-          {isLoading ? 'Translating...' : 'Translate'}
-        </button>
-        <button onClick={handleSwap} disabled={!outputText}>
-          Swap
-        </button>
-        <button onClick={handleClear} disabled={!inputText && !outputText}>
-          Clear
-        </button>
-      </div>
-
-      {error && <div className="error-message">{error}</div>}
-
       <div className="output-section">
         <textarea
-          value={outputText}
+          className={getOutputClass()}
+          value={getOutputValue()}
           readOnly
           placeholder="Translation result will appear here..."
           rows={6}
