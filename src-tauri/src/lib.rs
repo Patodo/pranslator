@@ -107,6 +107,7 @@ pub fn run() {
             commands::translate,
             commands::get_config,
             commands::set_config,
+            commands::validate_shortcut,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

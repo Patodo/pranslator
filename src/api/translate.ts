@@ -12,3 +12,7 @@ export async function getConfig(): Promise<Settings> {
 export async function setConfig(settings: Settings): Promise<void> {
   return await invoke<void>('set_config', { newSettings: settings });
 }
+
+export async function validateShortcut(shortcut: string): Promise<void> {
+  return await invoke<void>('validate_shortcut', { shortcut });
+}

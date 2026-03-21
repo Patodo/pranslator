@@ -144,7 +144,8 @@ body {
 
 /* Output states */
 @keyframes breathing {
-  0%, 100% {
+  0%,
+  100% {
     background: #e6f7ff;
     border-color: #91d5ff;
   }
@@ -171,7 +172,9 @@ body {
 .translation-panel textarea.output-success {
   background-color: rgba(135, 208, 104, 0.4);
   border-color: rgba(135, 208, 104, 0.6);
-  transition: background-color 0.75s ease-out, border-color 0.75s ease-out;
+  transition:
+    background-color 0.75s ease-out,
+    border-color 0.75s ease-out;
 }
 
 .translation-panel textarea.output-success.fade-out {
@@ -273,6 +276,129 @@ body {
   color: #999;
 }
 
+/* Shortcuts List */
+.shortcuts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shortcut-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: #fafafa;
+  border-radius: 8px;
+}
+
+.shortcut-name {
+  position: relative;
+  font-size: 14px;
+  color: #333;
+}
+
+.shortcut-tooltip {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  z-index: 10;
+  padding: 8px 12px;
+  background: #333;
+  color: #fff;
+  font-size: 12px;
+  font-weight: normal;
+  line-height: 1.4;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(4px);
+  transition:
+    opacity 0.2s,
+    visibility 0.2s,
+    transform 0.2s;
+  pointer-events: none;
+}
+
+.shortcut-tooltip::after {
+  content: '';
+  position: absolute;
+  left: 16px;
+  bottom: -5px;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid #333;
+}
+
+.shortcut-name:hover .shortcut-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* Shortcut Input */
+.shortcut-input-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.shortcut-record-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #333;
+  white-space: nowrap;
+  min-width: 130px;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.shortcut-record-btn:hover:not(:disabled) {
+  border-color: #40a9ff;
+  color: #1890ff;
+}
+
+.shortcut-record-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.shortcut-record-btn.recording {
+  border-color: #1890ff;
+  background: #e6f7ff;
+  color: #1890ff;
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(24, 144, 255, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(24, 144, 255, 0);
+  }
+}
+
+.shortcut-error {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  font-size: 12px;
+  color: #ff4d4f;
+}
+
 .loading {
   text-align: center;
   color: #666;
@@ -307,7 +433,8 @@ body {
   }
 
   @keyframes breathing-dark {
-    0%, 100% {
+    0%,
+    100% {
       background: #111d2c;
       border-color: #15395b;
     }
@@ -328,7 +455,9 @@ body {
   .translation-panel textarea.output-success {
     background-color: rgba(135, 208, 104, 0.2);
     border-color: rgba(135, 208, 104, 0.35);
-    transition: background-color 0.75s ease-out, border-color 0.75s ease-out;
+    transition:
+      background-color 0.75s ease-out,
+      border-color 0.75s ease-out;
   }
 
   .translation-panel textarea.output-success.fade-out {
@@ -361,5 +490,39 @@ body {
 
   .form-hint {
     color: #666;
+  }
+
+  .shortcut-item {
+    background: #1f1f1f;
+  }
+
+  .shortcut-name {
+    color: #f0f0f0;
+  }
+
+  .shortcut-tooltip {
+    background: #f0f0f0;
+    color: #333;
+  }
+
+  .shortcut-tooltip::after {
+    border-top-color: #f0f0f0;
+  }
+
+  .shortcut-record-btn {
+    background: #1f1f1f;
+    border-color: #434343;
+    color: #f0f0f0;
+  }
+
+  .shortcut-record-btn:hover:not(:disabled) {
+    border-color: #40a9ff;
+    color: #40a9ff;
+  }
+
+  .shortcut-record-btn.recording {
+    background: #111d2c;
+    border-color: #40a9ff;
+    color: #40a9ff;
   }
 }

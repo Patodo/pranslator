@@ -46,12 +46,7 @@ function App() {
                 <Languages size={18} />
                 <span>Translate</span>
               </button>
-              <button
-                className="icon-btn"
-                onClick={handleSwap}
-                disabled={!outputText}
-                title="Swap"
-              >
+              <button className="icon-btn" onClick={handleSwap} disabled={!outputText} title="Swap">
                 <ArrowRightLeft size={18} />
               </button>
               <button

@@ -5,6 +5,17 @@ use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
 use crate::config::Settings;
 
 #[tauri::command]
+pub fn validate_shortcut(shortcut: String) -> Result<(), String> {
+    if shortcut.trim().is_empty() {
+        return Err("Shortcut cannot be empty".to_string());
+    }
+    shortcut
+        .parse::<Shortcut>()
+        .map(|_| ())
+        .map_err(|e| format!("Invalid shortcut: {}", e))
+}
+
+#[tauri::command]
 pub fn get_config(settings: State<'_, Mutex<Settings>>) -> Result<Settings, String> {
     let settings = settings.lock().map_err(|e| e.to_string())?;
     Ok(settings.clone())
@@ -34,11 +45,14 @@ pub fn set_config(
 
     // Register new shortcut if changed
     if shortcut_changed {
-        if let Ok(new_shortcut) = new_settings.shortcuts.toggle_window.parse::<Shortcut>() {
-            app.global_shortcut()
-                .register(new_shortcut)
-                .map_err(|e| e.to_string())?;
-        }
+        let new_shortcut = new_settings
+            .shortcuts
+            .toggle_window
+            .parse::<Shortcut>()
+            .map_err(|e| format!("Invalid shortcut: {}", e))?;
+        app.global_shortcut()
+            .register(new_shortcut)
+            .map_err(|e| e.to_string())?;
     }
 
     Ok(())

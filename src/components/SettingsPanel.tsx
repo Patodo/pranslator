@@ -1,13 +1,22 @@
 import { useEffect, useState } from 'react';
 import { Cloud, Keyboard } from 'lucide-react';
-import { useSettingsStore } from '../stores/settings';
 import type { Settings } from '../types';
+import { useSettingsStore } from '../stores/settings';
+import { ShortcutInput } from './ShortcutInput';
 
 type TabId = 'api' | 'shortcuts';
 
 const tabs: { id: TabId; label: string; icon: typeof Cloud }[] = [
   { id: 'api', label: 'API', icon: Cloud },
   { id: 'shortcuts', label: 'Shortcuts', icon: Keyboard },
+];
+
+const SHORTCUT_CONFIGS = [
+  {
+    field: 'toggle_window' as const,
+    name: 'Toggle Window',
+    description: 'Global shortcut to show/hide the application window',
+  },
 ];
 
 export function SettingsPanel() {
@@ -115,21 +124,20 @@ export function SettingsPanel() {
         )}
 
         {activeTab === 'shortcuts' && (
-          <>
-            <div className="form-group">
-              <label htmlFor="toggle_window">Toggle Window</label>
-              <input
-                id="toggle_window"
-                type="text"
-                value={localSettings.shortcuts.toggle_window}
-                onChange={(e) => handleShortcutChange('toggle_window', e.target.value)}
-                placeholder="Alt+Shift+T"
-              />
-              <span className="form-hint">
-                Global shortcut to show/hide the application window
-              </span>
-            </div>
-          </>
+          <div className="shortcuts-list">
+            {SHORTCUT_CONFIGS.map((config) => (
+              <div key={config.field} className="shortcut-item">
+                <span className="shortcut-name">
+                  {config.name}
+                  <span className="shortcut-tooltip">{config.description}</span>
+                </span>
+                <ShortcutInput
+                  value={localSettings.shortcuts[config.field]}
+                  onChange={(v) => handleShortcutChange(config.field, v)}
+                />
+              </div>
+            ))}
+          </div>
         )}
 
         <button className="save-btn" onClick={handleSave}>
