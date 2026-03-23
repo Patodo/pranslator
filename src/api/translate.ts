@@ -16,3 +16,7 @@ export async function setConfig(settings: Settings): Promise<void> {
 export async function validateShortcut(shortcut: string): Promise<void> {
   return await invoke<void>('validate_shortcut', { shortcut });
 }
+
+export async function hideWindow(): Promise<void> {
+  return await invoke<void>('hide_window');
+}

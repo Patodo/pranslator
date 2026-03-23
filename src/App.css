@@ -639,3 +639,161 @@ body {
     background: #333;
   }
 }
+
+/* Leader Key Overlay */
+.leader-key-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.15s ease-out;
+}
+
+.leader-key-overlay.visible {
+  opacity: 1;
+}
+
+.leader-key-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  transform: scale(0.95);
+  transition: transform 0.15s ease-out;
+}
+
+.leader-key-overlay.visible .leader-key-card {
+  transform: scale(1);
+}
+
+.leader-key-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.leader-key-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  background: #f0f0f0;
+  border: 1px solid #d9d9d9;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: ui-monospace, monospace;
+}
+
+.leader-key-plus {
+  color: #999;
+  font-size: 14px;
+}
+
+.leader-key-hint {
+  color: #666;
+  font-size: 13px;
+}
+
+.leader-key-shortcuts {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.leader-key-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.leader-key-item .leader-key-badge {
+  background: #e6f7ff;
+  border-color: #91d5ff;
+  color: #1890ff;
+}
+
+.leader-key-desc {
+  color: #333;
+  font-size: 14px;
+}
+
+.leader-key-footer {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #e8e8e8;
+  text-align: center;
+  color: #999;
+  font-size: 12px;
+}
+
+.leader-key-footer kbd {
+  display: inline-block;
+  padding: 2px 6px;
+  background: #f0f0f0;
+  border: 1px solid #d9d9d9;
+  border-radius: 3px;
+  font-family: inherit;
+  font-size: 11px;
+}
+
+/* Dark mode for Leader Key Overlay */
+@media (prefers-color-scheme: dark) {
+  .leader-key-card {
+    background: #1f1f1f;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  }
+
+  .leader-key-header {
+    border-bottom-color: #434343;
+  }
+
+  .leader-key-badge {
+    background: #333;
+    border-color: #434343;
+    color: #f0f0f0;
+  }
+
+  .leader-key-plus {
+    color: #666;
+  }
+
+  .leader-key-hint {
+    color: #aaa;
+  }
+
+  .leader-key-item .leader-key-badge {
+    background: #111d2c;
+    border-color: #15395b;
+    color: #40a9ff;
+  }
+
+  .leader-key-desc {
+    color: #f0f0f0;
+  }
+
+  .leader-key-footer {
+    border-top-color: #434343;
+    color: #666;
+  }
+
+  .leader-key-footer kbd {
+    background: #333;
+    border-color: #434343;
+    color: #aaa;
+  }
+}

@@ -112,6 +112,7 @@ pub fn run() {
             commands::get_config,
             commands::set_config,
             commands::validate_shortcut,
+            commands::hide_window,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

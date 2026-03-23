@@ -1,5 +1,5 @@
 use std::sync::Mutex;
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, Manager, State};
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
 
 use crate::config::Settings;
@@ -55,5 +55,13 @@ pub fn set_config(
             .map_err(|e| e.to_string())?;
     }
 
+    Ok(())
+}
+
+#[tauri::command]
+pub fn hide_window(app: AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("main") {
+        window.hide().map_err(|e| e.to_string())?;
+    }
     Ok(())
 }

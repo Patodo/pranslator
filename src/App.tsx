@@ -1,8 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { X, Settings, ArrowRightLeft, Trash2, Languages } from 'lucide-react';
 import { listen } from '@tauri-apps/api/event';
 import { TranslationPanel, TranslationView } from './components/TranslationPanel';
 import { SettingsPanel } from './components/SettingsPanel';
+import { LeaderKeyOverlay } from './components/LeaderKeyOverlay';
+import { useLeaderKey } from './hooks/useLeaderKey';
+import { hideWindow } from './api/translate';
 import './App.css';
 
 type PageState = 'home' | 'settings' | 'settings-to-home';
@@ -51,8 +54,20 @@ function App() {
 
   const showSettings = pageState !== 'home';
 
+  const handleHideWindow = useCallback(async () => {
+    await hideWindow();
+  }, []);
+
+  const { isLeaderMode } = useLeaderKey({
+    outputText,
+    handleCopy,
+    onHide: handleHideWindow,
+    enabled: !showSettings,
+  });
+
   return (
     <main className={`app-container ${pageState}`}>
+      <LeaderKeyOverlay isVisible={isLeaderMode} />
       {showSettings ? (
         <div className={`page-wrapper ${pageState === 'settings' ? 'slide-in' : 'slide-out'}`}>
           <div className="toolbar">
