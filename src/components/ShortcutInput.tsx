@@ -42,14 +42,26 @@ export function ShortcutInput({ value, onChange, disabled }: ShortcutInputProps)
         return;
       }
 
-      // Build shortcut string
-      let key = e.key.toUpperCase();
+      // Build shortcut string - use e.code for physical key to avoid Shift+2 -> @ issue
+      let key = e.code;
+      // Handle digit keys (Digit1 -> 1, Digit2 -> 2, etc.)
+      if (key.startsWith('Digit')) {
+        key = key.slice(5);
+      }
+      // Handle numpad keys (Numpad1 -> Num1, etc.)
+      if (key.startsWith('Numpad')) {
+        key = 'Num' + key.slice(6);
+      }
       // Handle special keys
-      if (e.key === ' ') key = 'Space';
-      if (e.key === 'ArrowUp') key = 'Up';
-      if (e.key === 'ArrowDown') key = 'Down';
-      if (e.key === 'ArrowLeft') key = 'Left';
-      if (e.key === 'ArrowRight') key = 'Right';
+      if (key === 'Space') key = 'Space';
+      if (key === 'ArrowUp') key = 'Up';
+      if (key === 'ArrowDown') key = 'Down';
+      if (key === 'ArrowLeft') key = 'Left';
+      if (key === 'ArrowRight') key = 'Right';
+      // For letter keys, KeyA -> A, KeyB -> B, etc.
+      if (key.startsWith('Key') && key.length === 4) {
+        key = key.slice(3);
+      }
 
       const shortcut = [...modifiers, key].join('+');
 
