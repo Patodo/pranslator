@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { translate } from '../api/translate';
+import { DURATIONS } from '../constants/animations';
 
 export type TranslationStatus = 'idle' | 'loading' | 'success' | 'error';
 export type CopyState = 'idle' | 'copied';
@@ -24,8 +25,8 @@ export function TranslationPanel() {
       setOutputText(result.translated_text);
       setStatus('success');
       setSuccessState('show');
-      setTimeout(() => setSuccessState('fade'), 50);
-      setTimeout(() => setSuccessState('none'), 850);
+      setTimeout(() => setSuccessState('fade'), DURATIONS.SUCCESS_FADE_START);
+      setTimeout(() => setSuccessState('none'), DURATIONS.SUCCESS_FADE_END);
     } catch (err) {
       setOutputText(String(err));
       setStatus('error');
@@ -56,7 +57,7 @@ export function TranslationPanel() {
     if (!outputText) return;
     await navigator.clipboard.writeText(outputText);
     setCopyState('copied');
-    setTimeout(() => setCopyState('idle'), 1500);
+    setTimeout(() => setCopyState('idle'), DURATIONS.COPY_FEEDBACK);
   }, [outputText]);
 
   return {

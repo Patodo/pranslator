@@ -6,6 +6,8 @@ import { SettingsPanel } from './components/SettingsPanel';
 import { LeaderKeyOverlay } from './components/LeaderKeyOverlay';
 import { useLeaderKey } from './hooks/useLeaderKey';
 import { hideWindow } from './api/translate';
+import { EVENTS } from './constants';
+import { DURATIONS } from './constants/animations';
 import './App.css';
 
 type PageState = 'home' | 'settings' | 'settings-to-home';
@@ -37,7 +39,7 @@ function App() {
 
   // Reset to home page when window is shown via shortcut
   useEffect(() => {
-    const unlisten = listen('reset-to-home', () => {
+    const unlisten = listen(EVENTS.RESET_TO_HOME, () => {
       setPageState('home');
     });
     return () => {
@@ -47,7 +49,7 @@ function App() {
 
   useEffect(() => {
     if (pageState === 'settings-to-home') {
-      const timer = setTimeout(() => setPageState('home'), 200);
+      const timer = setTimeout(() => setPageState('home'), DURATIONS.PAGE_TRANSITION);
       return () => clearTimeout(timer);
     }
   }, [pageState]);

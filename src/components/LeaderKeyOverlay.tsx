@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { SHORTCUTS } from '../config/shortcuts';
+import { DURATIONS } from '../constants/animations';
 
 interface LeaderKeyOverlayProps {
   isVisible: boolean;
@@ -19,7 +20,7 @@ export function LeaderKeyOverlay({ isVisible }: LeaderKeyOverlayProps) {
       setIsAnimating(false);
       const timer = setTimeout(() => {
         setShouldRender(false);
-      }, 150);
+      }, DURATIONS.NORMAL);
       return () => clearTimeout(timer);
     }
   }, [isVisible]);

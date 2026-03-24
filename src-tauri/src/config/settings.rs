@@ -1,3 +1,6 @@
+// Type definitions for settings
+// Corresponds to TypeScript types in src/types/index.ts
+
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -5,6 +8,7 @@ use std::path::PathBuf;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LlmSettings {
+    // Corresponds to TypeScript: LlmSettings
     pub api_key: String,
     pub api_base: String,
     pub model: String,
@@ -22,6 +26,7 @@ impl Default for LlmSettings {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ShortcutSettings {
+    // Corresponds to TypeScript: ShortcutSettings
     pub toggle_window: String,
 }
 
@@ -35,6 +40,7 @@ impl Default for ShortcutSettings {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Settings {
+    // Corresponds to TypeScript: Settings
     pub llm: LlmSettings,
     pub shortcuts: ShortcutSettings,
 }

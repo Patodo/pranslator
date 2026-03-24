@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Cloud, Keyboard } from 'lucide-react';
 import type { Settings } from '../types';
 import { useSettingsStore } from '../stores/settings';
+import { GLOBAL_SHORTCUT_CONFIGS } from '../config/globalShortcuts';
 import { ShortcutInput } from './ShortcutInput';
 
 type TabId = 'api' | 'shortcuts';
@@ -9,14 +10,6 @@ type TabId = 'api' | 'shortcuts';
 const tabs: { id: TabId; label: string; icon: typeof Cloud }[] = [
   { id: 'api', label: 'API', icon: Cloud },
   { id: 'shortcuts', label: 'Shortcuts', icon: Keyboard },
-];
-
-const SHORTCUT_CONFIGS = [
-  {
-    field: 'toggle_window' as const,
-    name: 'Toggle Window',
-    description: 'Global shortcut to show/hide the application window',
-  },
 ];
 
 export function SettingsPanel() {
@@ -124,7 +117,7 @@ export function SettingsPanel() {
 
         {activeTab === 'shortcuts' && (
           <div className="shortcuts-list">
-            {SHORTCUT_CONFIGS.map((config) => (
+            {GLOBAL_SHORTCUT_CONFIGS.map((config) => (
               <div key={config.field} className="shortcut-item">
                 <span className="shortcut-name">
                   {config.name}

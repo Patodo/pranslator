@@ -1,5 +1,6 @@
 mod commands;
 mod config;
+mod constants;
 mod llm;
 
 use std::sync::Mutex;
@@ -19,7 +20,7 @@ pub fn run() {
                         return;
                     }
                     // Toggle window on shortcut trigger
-                    if let Some(window) = app.get_webview_window("main") {
+                    if let Some(window) = app.get_webview_window(constants::MAIN_WINDOW) {
                         let is_visible = window.is_visible().unwrap_or(false);
                         let is_focused = window.is_focused().unwrap_or(false);
 
@@ -28,12 +29,12 @@ pub fn run() {
                             let _ = window.show();
                             let _ = window.set_focus();
                             // Emit event to reset to home page
-                            let _ = app.emit("reset-to-home", ());
+                            let _ = app.emit(constants::EVENT_RESET_TO_HOME, ());
                         } else if !is_focused {
                             // Window is visible but not focused, just focus it
                             let _ = window.set_focus();
                             // Emit event to reset to home page
-                            let _ = app.emit("reset-to-home", ());
+                            let _ = app.emit(constants::EVENT_RESET_TO_HOME, ());
                         } else {
                             // Window is visible and focused, hide it
                             let _ = window.hide();
@@ -55,7 +56,7 @@ pub fn run() {
             app.manage(Mutex::new(settings));
 
             // Intercept window close event - minimize to tray instead of closing
-            if let Some(window) = app.get_webview_window("main") {
+            if let Some(window) = app.get_webview_window(constants::MAIN_WINDOW) {
                 let window_clone = window.clone();
                 window.on_window_event(move |event| {
                     if let tauri::WindowEvent::CloseRequested { api, .. } = event {
@@ -84,7 +85,7 @@ pub fn run() {
                     } = event
                     {
                         let app = tray.app_handle();
-                        if let Some(window) = app.get_webview_window("main") {
+                        if let Some(window) = app.get_webview_window(constants::MAIN_WINDOW) {
                             let _ = window.show();
                             let _ = window.set_focus();
                         }
@@ -96,7 +97,7 @@ pub fn run() {
                         app.exit(0);
                     }
                     "show" => {
-                        if let Some(window) = app.get_webview_window("main") {
+                        if let Some(window) = app.get_webview_window(constants::MAIN_WINDOW) {
                             let _ = window.show();
                             let _ = window.set_focus();
                         }

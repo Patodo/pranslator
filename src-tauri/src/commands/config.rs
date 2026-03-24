@@ -3,6 +3,7 @@ use tauri::{AppHandle, Manager, State};
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
 
 use crate::config::Settings;
+use crate::constants;
 
 #[tauri::command]
 pub fn validate_shortcut(shortcut: String) -> Result<(), String> {
@@ -60,7 +61,7 @@ pub fn set_config(
 
 #[tauri::command]
 pub fn hide_window(app: AppHandle) -> Result<(), String> {
-    if let Some(window) = app.get_webview_window("main") {
+    if let Some(window) = app.get_webview_window(constants::MAIN_WINDOW) {
         window.hide().map_err(|e| e.to_string())?;
     }
     Ok(())
