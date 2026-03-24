@@ -112,6 +112,19 @@ export function SettingsPanel() {
               />
               <span className="form-hint">The model to use for translation</span>
             </div>
+
+            <div className="form-group">
+              <label htmlFor="system_prompt">Prompt Template</label>
+              <textarea
+                id="system_prompt"
+                value={localSettings.llm.system_prompt}
+                onChange={(e) => handleLlmChange('system_prompt', e.target.value)}
+                rows={6}
+              />
+              <span className="form-hint">
+                Required: <code>{'{{text}}'}</code> will be replaced with the text to translate
+              </span>
+            </div>
           </>
         )}
 

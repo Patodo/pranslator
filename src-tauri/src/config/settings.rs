@@ -6,12 +6,20 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 
+use crate::constants::DEFAULT_SYSTEM_PROMPT;
+
+fn default_system_prompt() -> String {
+    DEFAULT_SYSTEM_PROMPT.to_string()
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LlmSettings {
     // Corresponds to TypeScript: LlmSettings
     pub api_key: String,
     pub api_base: String,
     pub model: String,
+    #[serde(default = "default_system_prompt")]
+    pub system_prompt: String,
 }
 
 impl Default for LlmSettings {
@@ -20,6 +28,7 @@ impl Default for LlmSettings {
             api_key: String::new(),
             api_base: "https://api.openai.com/v1".to_string(),
             model: "gpt-4o-mini".to_string(),
+            system_prompt: DEFAULT_SYSTEM_PROMPT.to_string(),
         }
     }
 }

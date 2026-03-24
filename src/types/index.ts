@@ -6,6 +6,7 @@ export interface LlmSettings {
   api_key: string;
   api_base: string;
   model: string;
+  system_prompt: string;
 }
 
 export interface ShortcutSettings {

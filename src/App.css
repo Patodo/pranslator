@@ -335,6 +335,8 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .settings-content .save-btn {
@@ -364,7 +366,8 @@ body {
   color: #333;
 }
 
-.form-group input {
+.form-group input,
+.form-group textarea {
   width: 100%;
   padding: 8px 12px;
   border: 1px solid #d9d9d9;
@@ -373,7 +376,15 @@ body {
   box-sizing: border-box;
 }
 
-.form-group input:focus {
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
   outline: none;
   border-color: #1890ff;
   box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
@@ -524,14 +535,16 @@ body {
   }
 
   .translation-panel textarea,
-  .form-group input {
+  .form-group input,
+  .form-group textarea {
     background: #1f1f1f;
     border-color: #434343;
     color: #f0f0f0;
   }
 
   .translation-panel textarea:focus,
-  .form-group input:focus {
+  .form-group input:focus,
+  .form-group textarea:focus {
     border-color: #40a9ff;
     box-shadow: 0 0 0 2px rgba(64, 169, 255, 0.2);
   }

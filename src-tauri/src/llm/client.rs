@@ -32,30 +32,18 @@ struct ChatResponse {
     choices: Vec<ChatChoice>,
 }
 
-const SYSTEM_PROMPT: &str = r#"You are a professional translator. Translate the given text between English and Chinese.
-
-Rules:
-1. If the input is English, translate to Chinese (Simplified).
-2. If the input is Chinese, translate to English.
-3. If the input contains both languages, translate the entire text to the opposite language of the majority.
-4. Provide only the translation result, no explanations or notes.
-5. Maintain the original formatting, including line breaks and punctuation style where appropriate."#;
-
 pub async fn translate_text(text: &str, settings: &LlmSettings) -> Result<String> {
     let client = Client::new();
 
+    // Replace {{text}} placeholder with actual text and send as user message
+    let prompt = settings.system_prompt.replace("{{text}}", text);
+
     let request = ChatRequest {
         model: settings.model.clone(),
-        messages: vec![
-            ChatMessage {
-                role: "system".to_string(),
-                content: SYSTEM_PROMPT.to_string(),
-            },
-            ChatMessage {
-                role: "user".to_string(),
-                content: text.to_string(),
-            },
-        ],
+        messages: vec![ChatMessage {
+            role: "user".to_string(),
+            content: prompt,
+        }],
         stream: false,
     };
 
