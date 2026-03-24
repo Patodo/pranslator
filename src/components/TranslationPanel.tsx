@@ -168,6 +168,7 @@ export function TranslationView({
   successState,
   copyState,
   isLeaderMode,
+  translationMode,
   wordData,
   setInputText,
   handleKeyDown,
@@ -180,6 +181,7 @@ export function TranslationView({
   successState: 'none' | 'show' | 'fade';
   copyState: CopyState;
   isLeaderMode: boolean;
+  translationMode: TranslationMode;
   wordData: WordResponse | null;
   setInputText: (text: string) => void;
   handleKeyDown: (e: React.KeyboardEvent) => void;
@@ -281,8 +283,30 @@ export function TranslationView({
 
       <div className="output-section">
         <div className="output-wrapper">
-          {wordData ? (
-            <WordTableView wordData={wordData} />
+          {translationMode === 'word' ? (
+            wordData ? (
+              <WordTableView wordData={wordData} />
+            ) : (
+              <div className="word-table-container">
+                <table className="word-table">
+                  <thead>
+                    <tr>
+                      <th>Word</th>
+                      <th>Phonetic</th>
+                      <th>Meaning</th>
+                      <th>Example</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td colSpan={4} className="empty-hint">
+                        {status === 'loading' ? 'Looking up...' : 'Enter a word to look up'}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            )
           ) : (
             <textarea
               ref={outputRef}

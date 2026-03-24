@@ -1033,6 +1033,13 @@ body {
   background: #f0f0f0;
 }
 
+.word-table .empty-hint {
+  text-align: center;
+  color: #999;
+  font-style: italic;
+  padding: 24px 10px;
+}
+
 /* Dark mode for Favorites */
 @media (prefers-color-scheme: dark) {
   .favorite-btn.saved {

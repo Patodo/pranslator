@@ -173,6 +173,7 @@ function App() {
               successState={successState}
               copyState={copyState}
               isLeaderMode={isLeaderMode}
+              translationMode={translationMode}
               wordData={wordData}
               setInputText={setInputText}
               handleKeyDown={handleKeyDown}

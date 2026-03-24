@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Check, Cloud, Download, Keyboard, Trash2 } from 'lucide-react';
+import { Book, Check, Cloud, Download, Keyboard, Trash2 } from 'lucide-react';
 import type { DictionaryStatus, Settings } from '../types';
 import { deleteDictionary, downloadDictionary, getDictionaryStatus } from '../api/dictionary';
 import { useSettingsStore } from '../stores/settings';
