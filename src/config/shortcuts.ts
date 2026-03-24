@@ -9,6 +9,7 @@ export const SHORTCUTS: ShortcutConfig[] = [
   { key: 'd', description: 'Translate', action: 'translate' },
   { key: 'c', description: 'Copy translation', action: 'copy', requiresOutput: true },
   { key: 'q', description: 'Copy and hide', action: 'copyAndHide', requiresOutput: true },
+  { key: 'b', description: 'Add to favorites', action: 'favorite', requiresOutput: true },
 ];
 
 export const SHORTCUT_KEYS = new Set(SHORTCUTS.map((s) => s.key));

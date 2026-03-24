@@ -69,6 +69,9 @@ Zustand store with async load/update that syncs with Rust backend.
 ### Global Shortcuts
 Handled in `lib.rs` via `tauri-plugin-global-shortcut`. Shortcut strings follow format like `"Alt+Shift+T"`.
 
+### Leader Key Shortcuts
+Add app shortcuts via `src/config/shortcuts.ts` config and `App.tsx` handlers; never use raw `window.addEventListener`.
+
 ### System Tray
 Window close is intercepted to hide instead of quit. Double-click tray icon shows window.
 

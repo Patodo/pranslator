@@ -6,7 +6,6 @@ import { SettingsPanel } from './components/SettingsPanel';
 import { FavoritesPanel } from './components/FavoritesPanel';
 import { LeaderKeyOverlay } from './components/LeaderKeyOverlay';
 import { useLeaderKey } from './hooks/useLeaderKey';
-import { useFavoritesStore } from './stores/favorites';
 import { hideWindow } from './api/translate';
 import { EVENTS } from './constants';
 import { DURATIONS } from './constants/animations';
@@ -32,8 +31,6 @@ function App() {
     handleCopy,
     handleFavorite,
   } = TranslationPanel();
-
-  const addFavorite = useFavoritesStore((state) => state.addFavorite);
 
   const goToSettings = () => {
     setPageState('settings');
@@ -68,19 +65,6 @@ function App() {
     }
   }, [pageState]);
 
-  // Alt+B shortcut for quick favorite
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.altKey && e.key === 'b' && pageState === 'home' && outputText && inputText) {
-        if (favoriteState !== 'saved') {
-          addFavorite(inputText, outputText);
-        }
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [pageState, inputText, outputText, favoriteState, addFavorite]);
-
   const showSettings = pageState === 'settings' || pageState === 'settings-to-home';
   const showFavorites = pageState === 'favorites' || pageState === 'favorites-to-home';
 
@@ -97,14 +81,15 @@ function App() {
         await handleHideWindow();
       },
       hide: handleHideWindow,
+      favorite: handleFavorite,
     }),
-    [handleTranslate, handleCopy, handleHideWindow]
+    [handleTranslate, handleCopy, handleHideWindow, handleFavorite]
   );
 
   const { isLeaderMode } = useLeaderKey({
     outputText,
     handlers: leaderKeyHandlers(),
-    enabled: !showSettings,
+    enabled: !showSettings && !showFavorites,
   });
 
   return (
