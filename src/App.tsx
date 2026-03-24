@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { X, Settings, ArrowRightLeft, Languages, Book } from 'lucide-react';
+import { X, Settings, ArrowRightLeft, Languages, Book, Star } from 'lucide-react';
 import { listen } from '@tauri-apps/api/event';
 import { TranslationPanel, TranslationView } from './components/TranslationPanel';
 import { SettingsPanel } from './components/SettingsPanel';
@@ -138,6 +138,14 @@ function App() {
               </button>
             </div>
             <div className="toolbar-right">
+              <button
+                className={`icon-btn ${favoriteState === 'saved' ? 'active' : ''}`}
+                onClick={handleFavorite}
+                disabled={!outputText || favoriteState === 'saved'}
+                title={favoriteState === 'saved' ? 'Saved!' : 'Add to favorites (Alt+B)'}
+              >
+                <Star size={20} fill={favoriteState === 'saved' ? 'currentColor' : 'none'} />
+              </button>
               <button className="icon-btn" onClick={goToFavorites} title="Favorites">
                 <Book size={20} />
               </button>
@@ -153,12 +161,10 @@ function App() {
               status={status}
               successState={successState}
               copyState={copyState}
-              favoriteState={favoriteState}
               isLeaderMode={isLeaderMode}
               setInputText={setInputText}
               handleKeyDown={handleKeyDown}
               handleCopy={handleCopy}
-              handleFavorite={handleFavorite}
               handleClear={handleClear}
             />
           </div>

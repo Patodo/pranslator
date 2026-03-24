@@ -149,6 +149,10 @@ body {
   cursor: not-allowed;
 }
 
+.icon-btn.active {
+  color: #faad14;
+}
+
 .primary-btn {
   display: flex;
   align-items: center;
@@ -552,6 +556,10 @@ body {
 
   .icon-btn:hover:not(:disabled) {
     background: #333;
+  }
+
+  .icon-btn.active {
+    color: #ffc53d;
   }
 
   .toolbar h2 {

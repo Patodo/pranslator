@@ -104,12 +104,10 @@ export function TranslationView({
   status,
   successState,
   copyState,
-  favoriteState,
   isLeaderMode,
   setInputText,
   handleKeyDown,
   handleCopy,
-  handleFavorite,
   handleClear,
 }: {
   inputText: string;
@@ -117,12 +115,10 @@ export function TranslationView({
   status: TranslationStatus;
   successState: 'none' | 'show' | 'fade';
   copyState: CopyState;
-  favoriteState: FavoriteState;
   isLeaderMode: boolean;
   setInputText: (text: string) => void;
   handleKeyDown: (e: React.KeyboardEvent) => void;
   handleCopy: () => void;
-  handleFavorite: () => void;
   handleClear: () => void;
 }) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -232,21 +228,6 @@ export function TranslationView({
           />
         </div>
         <div className="output-actions">
-          <button
-            className={`action-btn favorite-btn ${favoriteState === 'saved' ? 'saved' : ''}`}
-            onClick={handleFavorite}
-            disabled={!outputText || favoriteState === 'saved'}
-            title={favoriteState === 'saved' ? 'Saved!' : 'Add to favorites (Alt+B)'}
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill={favoriteState === 'saved' ? 'currentColor' : 'none'}
-              stroke="currentColor"
-              strokeWidth="2"
-            >
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-            </svg>
-          </button>
           <button
             className={`action-btn copy-btn ${copyState === 'copied' ? 'copied' : ''}`}
             onClick={handleCopy}
