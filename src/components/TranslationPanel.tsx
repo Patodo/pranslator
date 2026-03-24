@@ -10,6 +10,7 @@ export type FavoriteState = 'idle' | 'saved';
 export function TranslationPanel() {
   const [inputText, setInputText] = useState('');
   const [outputText, setOutputText] = useState('');
+  const [cachedOriginal, setCachedOriginal] = useState(''); // Original text from last translation
   const [isLoading, setIsLoading] = useState(false);
   const [status, setStatus] = useState<TranslationStatus>('idle');
   const [successState, setSuccessState] = useState<'none' | 'show' | 'fade'>('none');
@@ -29,6 +30,7 @@ export function TranslationPanel() {
     try {
       const result = await translate({ text: inputText });
       setOutputText(result.translated_text);
+      setCachedOriginal(inputText); // Cache the original text
       setStatus('success');
       setSuccessState('show');
       setTimeout(() => setSuccessState('fade'), DURATIONS.SUCCESS_FADE_START);
@@ -50,6 +52,7 @@ export function TranslationPanel() {
   const handleSwap = () => {
     setInputText(outputText);
     setOutputText('');
+    setCachedOriginal('');
     setStatus('idle');
     setFavoriteState('idle');
   };
@@ -57,6 +60,7 @@ export function TranslationPanel() {
   const handleClear = () => {
     setInputText('');
     setOutputText('');
+    setCachedOriginal('');
     setStatus('idle');
     setFavoriteState('idle');
   };
@@ -69,12 +73,12 @@ export function TranslationPanel() {
   }, [outputText]);
 
   const handleFavorite = useCallback(async () => {
-    if (!inputText || !outputText || favoriteState === 'saved') return;
-    const result = await addFavorite(inputText, outputText);
+    if (!cachedOriginal || !outputText || favoriteState === 'saved') return;
+    const result = await addFavorite(cachedOriginal, outputText);
     if (result) {
       setFavoriteState('saved');
     }
-  }, [inputText, outputText, favoriteState, addFavorite]);
+  }, [cachedOriginal, outputText, favoriteState, addFavorite]);
 
   return {
     inputText,
