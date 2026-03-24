@@ -101,6 +101,7 @@ export function TranslationView({
   successState,
   copyState,
   favoriteState,
+  isLeaderMode,
   setInputText,
   handleKeyDown,
   handleCopy,
@@ -112,6 +113,7 @@ export function TranslationView({
   successState: 'none' | 'show' | 'fade';
   copyState: CopyState;
   favoriteState: FavoriteState;
+  isLeaderMode: boolean;
   setInputText: (text: string) => void;
   handleKeyDown: (e: React.KeyboardEvent) => void;
   handleCopy: () => void;
@@ -120,6 +122,12 @@ export function TranslationView({
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const outputRef = useRef<HTMLTextAreaElement>(null);
   const [allowOutputFocus, setAllowOutputFocus] = useState(false);
+  const isLeaderModeRef = useRef(isLeaderMode);
+
+  // Keep ref in sync with prop
+  useEffect(() => {
+    isLeaderModeRef.current = isLeaderMode;
+  }, [isLeaderMode]);
 
   useEffect(() => {
     const el = inputRef.current;
@@ -128,6 +136,19 @@ export function TranslationView({
       el.selectionStart = el.selectionEnd = el.value.length;
     }
   }, []);
+
+  // Disable IME during leader mode by blurring the input
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+
+    if (isLeaderMode) {
+      el.blur();
+    } else if (!allowOutputFocus) {
+      el.focus();
+      el.selectionStart = el.selectionEnd = el.value.length;
+    }
+  }, [isLeaderMode, allowOutputFocus]);
 
   const handleOutputDoubleClick = useCallback(() => {
     setAllowOutputFocus(true);
@@ -169,7 +190,7 @@ export function TranslationView({
           onChange={(e) => setInputText(e.target.value)}
           onKeyDown={handleKeyDown}
           onBlur={() => {
-            if (allowOutputFocus) return;
+            if (allowOutputFocus || isLeaderModeRef.current) return;
             const el = inputRef.current;
             if (el) {
               el.focus();

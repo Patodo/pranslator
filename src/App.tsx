@@ -162,6 +162,7 @@ function App() {
               successState={successState}
               copyState={copyState}
               favoriteState={favoriteState}
+              isLeaderMode={isLeaderMode}
               setInputText={setInputText}
               handleKeyDown={handleKeyDown}
               handleCopy={handleCopy}
