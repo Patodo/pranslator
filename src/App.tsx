@@ -58,10 +58,22 @@ function App() {
     await hideWindow();
   }, []);
 
+  const leaderKeyHandlers = useCallback(
+    () => ({
+      translate: handleTranslate,
+      copy: handleCopy,
+      copyAndHide: async () => {
+        await handleCopy();
+        await handleHideWindow();
+      },
+      hide: handleHideWindow,
+    }),
+    [handleTranslate, handleCopy, handleHideWindow]
+  );
+
   const { isLeaderMode } = useLeaderKey({
     outputText,
-    handleCopy,
-    onHide: handleHideWindow,
+    handlers: leaderKeyHandlers(),
     enabled: !showSettings,
   });
 

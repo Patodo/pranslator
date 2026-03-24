@@ -1,15 +1,16 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { SHORTCUT_KEYS, SHORTCUT_ACTIONS } from '../config/shortcuts';
 
 interface UseLeaderKeyOptions {
   outputText: string;
-  handleCopy: () => Promise<void>;
-  onHide: () => Promise<void>;
+  handlers: Record<string, () => Promise<void>>;
   enabled: boolean;
 }
 
-export function useLeaderKey({ outputText, handleCopy, onHide, enabled }: UseLeaderKeyOptions) {
+export function useLeaderKey({ outputText, handlers, enabled }: UseLeaderKeyOptions) {
   const [isLeaderMode, setIsLeaderMode] = useState(false);
   const altPressedRef = useRef(false);
+  const skipNextLeaderModeRef = useRef(false);
 
   const exitLeaderMode = useCallback(() => {
     setIsLeaderMode(false);
@@ -22,21 +23,14 @@ export function useLeaderKey({ outputText, handleCopy, onHide, enabled }: UseLea
     }
 
     const executeShortcut = (key: string) => {
-      if (key === 'c') {
-        exitLeaderMode();
-        if (outputText) {
-          handleCopy();
-        }
-      } else if (key === 'q') {
-        exitLeaderMode();
-        if (outputText) {
-          handleCopy().then(() => {
-            onHide();
-          });
-        } else {
-          onHide();
-        }
-      }
+      exitLeaderMode();
+      const config = SHORTCUT_ACTIONS[key];
+      if (!config) return;
+
+      if (config.requiresOutput && !outputText) return;
+
+      const handler = handlers[config.action];
+      handler?.();
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -50,24 +44,30 @@ export function useLeaderKey({ outputText, handleCopy, onHide, enabled }: UseLea
 
       if (isLeaderMode) {
         // In leader mode - handle shortcut keys
-        if (key === 'c' || key === 'q') {
+        if (SHORTCUT_KEYS.has(key)) {
           e.preventDefault();
           executeShortcut(key);
         } else if (key === 'escape') {
           exitLeaderMode();
-        } else if (key !== 'alt') {
+        } else {
+          // Exit on any other key (including Alt)
+          skipNextLeaderModeRef.current = true;
           exitLeaderMode();
         }
-      } else if (altPressedRef.current && (key === 'c' || key === 'q')) {
-        // Alt still held + C/Q pressed - handle as shortcut (supports Alt+C combo)
+      } else if (altPressedRef.current && SHORTCUT_KEYS.has(key)) {
+        // Alt still held + shortcut key pressed - handle as combo
         e.preventDefault();
+        skipNextLeaderModeRef.current = true;
         executeShortcut(key);
       }
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.key === 'Alt') {
-        if (!isLeaderMode) {
+        if (skipNextLeaderModeRef.current) {
+          // Skip entering leader mode after combo shortcut
+          skipNextLeaderModeRef.current = false;
+        } else if (!isLeaderMode) {
           // Enter leader mode on Alt release (if not already in it)
           setIsLeaderMode(true);
         }
@@ -82,7 +82,7 @@ export function useLeaderKey({ outputText, handleCopy, onHide, enabled }: UseLea
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
     };
-  }, [enabled, isLeaderMode, outputText, handleCopy, onHide, exitLeaderMode]);
+  }, [enabled, isLeaderMode, outputText, handlers, exitLeaderMode]);
 
   return { isLeaderMode };
 }

@@ -1,9 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-
-const SHORTCUTS = [
-  { key: 'C', description: 'Copy translation' },
-  { key: 'Q', description: 'Copy and hide' },
-];
+import { SHORTCUTS } from '../config/shortcuts';
 
 interface LeaderKeyOverlayProps {
   isVisible: boolean;
@@ -48,7 +44,7 @@ export function LeaderKeyOverlay({ isVisible }: LeaderKeyOverlayProps) {
         <div className="leader-key-shortcuts">
           {SHORTCUTS.map((shortcut) => (
             <div key={shortcut.key} className="leader-key-item">
-              <span className="leader-key-badge">{shortcut.key}</span>
+              <span className="leader-key-badge">{shortcut.key.toUpperCase()}</span>
               <span className="leader-key-desc">{shortcut.description}</span>
             </div>
           ))}
