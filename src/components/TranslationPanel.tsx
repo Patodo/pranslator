@@ -110,6 +110,7 @@ export function TranslationView({
   handleKeyDown,
   handleCopy,
   handleFavorite,
+  handleClear,
 }: {
   inputText: string;
   outputText: string;
@@ -122,6 +123,7 @@ export function TranslationView({
   handleKeyDown: (e: React.KeyboardEvent) => void;
   handleCopy: () => void;
   handleFavorite: () => void;
+  handleClear: () => void;
 }) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const outputRef = useRef<HTMLTextAreaElement>(null);
@@ -188,22 +190,32 @@ export function TranslationView({
   return (
     <div className="translation-panel">
       <div className="input-section">
-        <textarea
-          ref={inputRef}
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          onKeyDown={handleKeyDown}
-          onBlur={() => {
-            if (allowOutputFocus || isLeaderModeRef.current) return;
-            const el = inputRef.current;
-            if (el) {
-              el.focus();
-              el.selectionStart = el.selectionEnd = el.value.length;
-            }
-          }}
-          placeholder="Enter text to translate (Ctrl+Enter to translate)"
-          rows={6}
-        />
+        <div className="input-wrapper">
+          <textarea
+            ref={inputRef}
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onBlur={() => {
+              if (allowOutputFocus || isLeaderModeRef.current) return;
+              const el = inputRef.current;
+              if (el) {
+                el.focus();
+                el.selectionStart = el.selectionEnd = el.value.length;
+              }
+            }}
+            placeholder="Enter text to translate (Ctrl+Enter to translate)"
+            rows={6}
+          />
+        </div>
+        <div className="input-actions">
+          <button className="action-btn" onClick={handleClear} disabled={!inputText} title="Clear">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+            </svg>
+          </button>
+        </div>
       </div>
 
       <div className="output-section">
@@ -218,41 +230,40 @@ export function TranslationView({
             onDoubleClick={handleOutputDoubleClick}
             onBlur={handleOutputBlur}
           />
-          {outputText && (
-            <>
-              <button
-                className={`favorite-btn ${favoriteState === 'saved' ? 'saved' : ''}`}
-                onClick={handleFavorite}
-                disabled={favoriteState === 'saved'}
-                title={favoriteState === 'saved' ? 'Saved!' : 'Add to favorites (Alt+B)'}
-              >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill={favoriteState === 'saved' ? 'currentColor' : 'none'}
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                </svg>
-              </button>
-              <button
-                className={`copy-btn ${copyState === 'copied' ? 'copied' : ''}`}
-                onClick={handleCopy}
-                title={copyState === 'copied' ? 'Copied!' : 'Copy'}
-              >
-                {copyState === 'copied' ? (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <polyline points="20 6 9 17 4 12" />
-                  </svg>
-                ) : (
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                  </svg>
-                )}
-              </button>
-            </>
-          )}
+        </div>
+        <div className="output-actions">
+          <button
+            className={`action-btn favorite-btn ${favoriteState === 'saved' ? 'saved' : ''}`}
+            onClick={handleFavorite}
+            disabled={!outputText || favoriteState === 'saved'}
+            title={favoriteState === 'saved' ? 'Saved!' : 'Add to favorites (Alt+B)'}
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill={favoriteState === 'saved' ? 'currentColor' : 'none'}
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
+          </button>
+          <button
+            className={`action-btn copy-btn ${copyState === 'copied' ? 'copied' : ''}`}
+            onClick={handleCopy}
+            disabled={!outputText}
+            title={copyState === 'copied' ? 'Copied!' : 'Copy'}
+          >
+            {copyState === 'copied' ? (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            ) : (
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+            )}
+          </button>
         </div>
       </div>
     </div>

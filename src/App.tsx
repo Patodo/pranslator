@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { X, Settings, ArrowRightLeft, Trash2, Languages, Book } from 'lucide-react';
+import { X, Settings, ArrowRightLeft, Languages, Book } from 'lucide-react';
 import { listen } from '@tauri-apps/api/event';
 import { TranslationPanel, TranslationView } from './components/TranslationPanel';
 import { SettingsPanel } from './components/SettingsPanel';
@@ -136,14 +136,6 @@ function App() {
               <button className="icon-btn" onClick={handleSwap} disabled={!outputText} title="Swap">
                 <ArrowRightLeft size={18} />
               </button>
-              <button
-                className="icon-btn"
-                onClick={handleClear}
-                disabled={!inputText && !outputText}
-                title="Clear"
-              >
-                <Trash2 size={18} />
-              </button>
             </div>
             <div className="toolbar-right">
               <button className="icon-btn" onClick={goToFavorites} title="Favorites">
@@ -167,6 +159,7 @@ function App() {
               handleKeyDown={handleKeyDown}
               handleCopy={handleCopy}
               handleFavorite={handleFavorite}
+              handleClear={handleClear}
             />
           </div>
         </div>

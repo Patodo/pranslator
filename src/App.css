@@ -194,16 +194,21 @@ body {
   min-height: 120px;
 }
 
+.input-wrapper,
 .output-wrapper {
-  position: relative;
-  width: 100%;
-  height: 100%;
+  flex: 1;
+  min-width: 0;
 }
 
-.copy-btn {
-  position: absolute;
-  top: 6px;
-  right: 6px;
+.input-actions,
+.output-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-left: 4px;
+}
+
+.action-btn {
   width: 28px;
   height: 28px;
   padding: 5px;
@@ -217,42 +222,21 @@ body {
   transition: all 0.2s;
   color: #666;
   opacity: 0.7;
-  z-index: 1;
 }
 
-.copy-btn:hover {
+.action-btn:hover {
   background: #f0f0f0;
   opacity: 1;
+}
+
+.action-btn svg {
+  width: 100%;
+  height: 100%;
 }
 
 .copy-btn.copied {
   color: #52c41a;
   opacity: 1;
-}
-
-.copy-btn svg {
-  width: 100%;
-  height: 100%;
-}
-
-.favorite-btn {
-  position: absolute;
-  top: 6px;
-  right: 40px;
-  width: 28px;
-  height: 28px;
-  padding: 5px;
-  border: none;
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 4px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  color: #666;
-  opacity: 0.7;
-  z-index: 1;
 }
 
 .favorite-btn:hover:not(:disabled) {
@@ -267,11 +251,6 @@ body {
 .favorite-btn.saved {
   color: #faad14;
   opacity: 1;
-}
-
-.favorite-btn svg {
-  width: 100%;
-  height: 100%;
 }
 
 .translation-panel textarea {
@@ -688,12 +667,12 @@ body {
     color: #40a9ff;
   }
 
-  .copy-btn {
+  .action-btn {
     background: rgba(31, 31, 31, 0.9);
     color: #aaa;
   }
 
-  .copy-btn:hover {
+  .action-btn:hover {
     background: #333;
   }
 }
@@ -977,15 +956,6 @@ body {
 
 /* Dark mode for Favorites */
 @media (prefers-color-scheme: dark) {
-  .favorite-btn {
-    background: rgba(31, 31, 31, 0.9);
-    color: #aaa;
-  }
-
-  .favorite-btn:hover:not(:disabled) {
-    background: #333;
-  }
-
   .favorite-btn.saved {
     color: #faad14;
   }
