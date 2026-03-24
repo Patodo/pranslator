@@ -1,6 +1,7 @@
 mod commands;
 mod config;
 mod constants;
+mod dictionary;
 mod llm;
 
 use std::sync::Mutex;
@@ -54,6 +55,10 @@ pub fn run() {
             }
 
             app.manage(Mutex::new(settings));
+
+            // Load dictionary if it exists
+            let dict = commands::load_dictionary_if_exists(app.handle());
+            app.manage(Mutex::new(dict));
 
             // Intercept window close event - minimize to tray instead of closing
             if let Some(window) = app.get_webview_window(constants::MAIN_WINDOW) {
@@ -117,6 +122,9 @@ pub fn run() {
             commands::get_favorites,
             commands::add_favorite,
             commands::delete_favorite,
+            commands::get_dictionary_status,
+            commands::download_dictionary,
+            commands::delete_dictionary,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

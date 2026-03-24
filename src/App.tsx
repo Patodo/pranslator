@@ -23,7 +23,10 @@ function App() {
     successState,
     copyState,
     favoriteState,
+    translationMode,
+    wordData,
     setInputText,
+    setTranslationMode,
     handleTranslate,
     handleSwap,
     handleClear,
@@ -133,6 +136,14 @@ function App() {
                 <Languages size={18} />
                 <span>Translate</span>
               </button>
+              <select
+                className="mode-select"
+                value={translationMode}
+                onChange={(e) => setTranslationMode(e.target.value as 'normal' | 'word')}
+              >
+                <option value="normal">Normal</option>
+                <option value="word">Word</option>
+              </select>
               <button className="icon-btn" onClick={handleSwap} disabled={!outputText} title="Swap">
                 <ArrowRightLeft size={18} />
               </button>
@@ -162,6 +173,7 @@ function App() {
               successState={successState}
               copyState={copyState}
               isLeaderMode={isLeaderMode}
+              wordData={wordData}
               setInputText={setInputText}
               handleKeyDown={handleKeyDown}
               handleCopy={handleCopy}

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { translate } from '../api/translate';
 import { useFavoritesStore } from '../stores/favorites';
 import { DURATIONS } from '../constants/animations';
+import type { TranslationMode, WordResponse } from '../types';
 
 export type TranslationStatus = 'idle' | 'loading' | 'success' | 'error';
 export type CopyState = 'idle' | 'copied';
@@ -16,6 +17,8 @@ export function TranslationPanel() {
   const [successState, setSuccessState] = useState<'none' | 'show' | 'fade'>('none');
   const [copyState, setCopyState] = useState<CopyState>('idle');
   const [favoriteState, setFavoriteState] = useState<FavoriteState>('idle');
+  const [translationMode, setTranslationMode] = useState<TranslationMode>('normal');
+  const [wordData, setWordData] = useState<WordResponse | null>(null);
 
   const addFavorite = useFavoritesStore((state) => state.addFavorite);
 
@@ -25,12 +28,29 @@ export function TranslationPanel() {
     setIsLoading(true);
     setStatus('loading');
     setOutputText('');
+    setWordData(null);
     setFavoriteState('idle');
 
     try {
-      const result = await translate({ text: inputText });
-      setOutputText(result.translated_text);
-      setCachedOriginal(inputText); // Cache the original text
+      const result = await translate({ text: inputText, mode: translationMode });
+
+      if (translationMode === 'word') {
+        // Try to parse as JSON for word mode
+        try {
+          const parsed = JSON.parse(result.translated_text) as WordResponse;
+          setWordData(parsed);
+          setOutputText('');
+        } catch {
+          // If not valid JSON, show as plain text
+          setOutputText(result.translated_text);
+          setWordData(null);
+        }
+      } else {
+        setOutputText(result.translated_text);
+        setWordData(null);
+      }
+
+      setCachedOriginal(inputText);
       setStatus('success');
       setSuccessState('show');
       setTimeout(() => setSuccessState('fade'), DURATIONS.SUCCESS_FADE_START);
@@ -38,6 +58,7 @@ export function TranslationPanel() {
     } catch (err) {
       setOutputText(String(err));
       setStatus('error');
+      setWordData(null);
     } finally {
       setIsLoading(false);
     }
@@ -55,6 +76,7 @@ export function TranslationPanel() {
     setCachedOriginal('');
     setStatus('idle');
     setFavoriteState('idle');
+    setWordData(null);
   };
 
   const handleClear = () => {
@@ -63,6 +85,7 @@ export function TranslationPanel() {
     setCachedOriginal('');
     setStatus('idle');
     setFavoriteState('idle');
+    setWordData(null);
   };
 
   const handleCopy = useCallback(async () => {
@@ -88,7 +111,10 @@ export function TranslationPanel() {
     successState,
     copyState,
     favoriteState,
+    translationMode,
+    wordData,
     setInputText,
+    setTranslationMode,
     handleTranslate,
     handleSwap,
     handleClear,
@@ -98,6 +124,43 @@ export function TranslationPanel() {
   };
 }
 
+function WordTableView({ wordData }: { wordData: WordResponse }) {
+  const copyText = async (text: string) => {
+    await navigator.clipboard.writeText(text);
+  };
+
+  return (
+    <div className="word-table-container">
+      <table className="word-table">
+        <thead>
+          <tr>
+            <th>Word</th>
+            <th>Phonetic</th>
+            <th>Meaning</th>
+            <th>Example</th>
+          </tr>
+        </thead>
+        <tbody>
+          {wordData.entries.map((entry, index) => (
+            <tr key={index}>
+              <td onClick={() => copyText(entry.word)} title="Click to copy">
+                {entry.word}
+              </td>
+              <td>{entry.phonetic}</td>
+              <td onClick={() => copyText(entry.meaning)} title="Click to copy">
+                {entry.meaning}
+              </td>
+              <td onClick={() => copyText(entry.example)} title="Click to copy">
+                {entry.example}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export function TranslationView({
   inputText,
   outputText,
@@ -105,6 +168,7 @@ export function TranslationView({
   successState,
   copyState,
   isLeaderMode,
+  wordData,
   setInputText,
   handleKeyDown,
   handleCopy,
@@ -116,6 +180,7 @@ export function TranslationView({
   successState: 'none' | 'show' | 'fade';
   copyState: CopyState;
   isLeaderMode: boolean;
+  wordData: WordResponse | null;
   setInputText: (text: string) => void;
   handleKeyDown: (e: React.KeyboardEvent) => void;
   handleCopy: () => void;
@@ -216,16 +281,20 @@ export function TranslationView({
 
       <div className="output-section">
         <div className="output-wrapper">
-          <textarea
-            ref={outputRef}
-            className={getOutputClass()}
-            value={getOutputValue()}
-            readOnly
-            placeholder={getPlaceholder()}
-            rows={6}
-            onDoubleClick={handleOutputDoubleClick}
-            onBlur={handleOutputBlur}
-          />
+          {wordData ? (
+            <WordTableView wordData={wordData} />
+          ) : (
+            <textarea
+              ref={outputRef}
+              className={getOutputClass()}
+              value={getOutputValue()}
+              readOnly
+              placeholder={getPlaceholder()}
+              rows={6}
+              onDoubleClick={handleOutputDoubleClick}
+              onBlur={handleOutputBlur}
+            />
+          )}
         </div>
         <div className="output-actions">
           <button

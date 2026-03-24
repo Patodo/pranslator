@@ -176,6 +176,21 @@ body {
   cursor: not-allowed;
 }
 
+.mode-select {
+  padding: 6px 10px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  outline: none;
+}
+
+.mode-select:focus {
+  border-color: #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
 .page-content {
   flex: 1;
   overflow: hidden;
@@ -962,6 +977,62 @@ body {
   color: #ff4d4f;
 }
 
+/* Word Table */
+.word-table-container {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  background: #fafafa;
+}
+
+.word-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.word-table th,
+.word-table td {
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid #e8e8e8;
+  vertical-align: top;
+}
+
+.word-table th {
+  background: #f5f5f5;
+  font-weight: 500;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.word-table tr:last-child td {
+  border-bottom: none;
+}
+
+.word-table td:first-child {
+  font-weight: 500;
+  color: #1890ff;
+  cursor: pointer;
+}
+
+.word-table td:nth-child(3) {
+  cursor: pointer;
+}
+
+.word-table td:last-child {
+  cursor: pointer;
+  color: #666;
+  font-style: italic;
+}
+
+.word-table td:hover {
+  background: #f0f0f0;
+}
+
 /* Dark mode for Favorites */
 @media (prefers-color-scheme: dark) {
   .favorite-btn.saved {
@@ -1006,5 +1077,267 @@ body {
   .favorite-delete-btn:hover {
     background: #2a1215;
     color: #ff7875;
+  }
+
+  .mode-select {
+    background: #1f1f1f;
+    border-color: #434343;
+    color: #f0f0f0;
+  }
+
+  .mode-select:focus {
+    border-color: #40a9ff;
+    box-shadow: 0 0 0 2px rgba(64, 169, 255, 0.2);
+  }
+
+  .word-table-container {
+    background: #1f1f1f;
+    border-color: #434343;
+  }
+
+  .word-table th,
+  .word-table td {
+    border-bottom-color: #434343;
+  }
+
+  .word-table th {
+    background: #2a2a2a;
+    color: #f0f0f0;
+  }
+
+  .word-table td {
+    color: #f0f0f0;
+  }
+
+  .word-table td:first-child {
+    color: #40a9ff;
+  }
+
+  .word-table td:last-child {
+    color: #aaa;
+  }
+
+  .word-table td:hover {
+    background: #333;
+  }
+}
+
+/* Dictionary Section */
+.dictionary-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dictionary-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dictionary-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  background: #e6f7ff;
+  border-radius: 12px;
+  color: #1890ff;
+}
+
+.dictionary-info h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+.dictionary-info p {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: #999;
+}
+
+.dictionary-card {
+  background: #fafafa;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.dictionary-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: #f5f5f5;
+  border-radius: 12px;
+  font-size: 13px;
+  color: #666;
+}
+
+.status-badge.success {
+  background: #f6ffed;
+  color: #52c41a;
+}
+
+.file-size {
+  font-size: 13px;
+  color: #999;
+}
+
+.dictionary-hint {
+  margin: 0 0 16px;
+  font-size: 13px;
+  color: #666;
+  line-height: 1.5;
+}
+
+.dictionary-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  background: #1890ff;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.dictionary-action-btn:hover:not(:disabled) {
+  background: #40a9ff;
+}
+
+.dictionary-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dictionary-action-btn.danger {
+  background: #fff;
+  color: #ff4d4f;
+  border: 1px solid #ffccc7;
+}
+
+.dictionary-action-btn.danger:hover:not(:disabled) {
+  background: #fff2f0;
+  border-color: #ff4d4f;
+}
+
+.download-progress {
+  margin-bottom: 16px;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: #666;
+}
+
+.progress-percent {
+  font-weight: 500;
+  color: #1890ff;
+}
+
+.progress-track {
+  height: 6px;
+  background: #e8e8e8;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: #1890ff;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+/* Dark mode for Dictionary */
+@media (prefers-color-scheme: dark) {
+  .dictionary-icon {
+    background: #111d2c;
+    color: #40a9ff;
+  }
+
+  .dictionary-info h3 {
+    color: #f0f0f0;
+  }
+
+  .dictionary-info p {
+    color: #666;
+  }
+
+  .dictionary-card {
+    background: #1f1f1f;
+    border-color: #434343;
+  }
+
+  .status-badge {
+    background: #333;
+    color: #aaa;
+  }
+
+  .status-badge.success {
+    background: #162312;
+    color: #73d13d;
+  }
+
+  .file-size {
+    color: #666;
+  }
+
+  .dictionary-hint {
+    color: #aaa;
+  }
+
+  .dictionary-action-btn {
+    background: #1890ff;
+  }
+
+  .dictionary-action-btn:hover:not(:disabled) {
+    background: #40a9ff;
+  }
+
+  .dictionary-action-btn.danger {
+    background: #1f1f1f;
+    color: #ff7875;
+    border-color: #58181c;
+  }
+
+  .dictionary-action-btn.danger:hover:not(:disabled) {
+    background: #2a1215;
+    border-color: #ff7875;
+  }
+
+  .progress-header {
+    color: #aaa;
+  }
+
+  .progress-percent {
+    color: #40a9ff;
+  }
+
+  .progress-track {
+    background: #333;
+  }
+
+  .progress-fill {
+    background: #40a9ff;
   }
 }

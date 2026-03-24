@@ -1,21 +1,28 @@
 import { useEffect, useState } from 'react';
-import { Cloud, Keyboard } from 'lucide-react';
-import type { Settings } from '../types';
+import { Check, Cloud, Download, Keyboard, Trash2 } from 'lucide-react';
+import type { DictionaryStatus, Settings } from '../types';
+import { deleteDictionary, downloadDictionary, getDictionaryStatus } from '../api/dictionary';
 import { useSettingsStore } from '../stores/settings';
 import { GLOBAL_SHORTCUT_CONFIGS } from '../config/globalShortcuts';
 import { ShortcutInput } from './ShortcutInput';
 
-type TabId = 'api' | 'shortcuts';
+type TabId = 'api' | 'shortcuts' | 'dictionary';
 
 const tabs: { id: TabId; label: string; icon: typeof Cloud }[] = [
   { id: 'api', label: 'API', icon: Cloud },
   { id: 'shortcuts', label: 'Shortcuts', icon: Keyboard },
+  { id: 'dictionary', label: 'Dictionary', icon: Book },
 ];
 
 export function SettingsPanel() {
   const { settings, loadSettings, updateSettings, isLoading, error } = useSettingsStore();
   const [localSettings, setLocalSettings] = useState<Settings | null>(null);
   const [activeTab, setActiveTab] = useState<TabId>('api');
+  const [dictStatus, setDictStatus] = useState<DictionaryStatus>({
+    downloaded: false,
+    downloading: false,
+    progress: 0,
+  });
 
   useEffect(() => {
     loadSettings();
@@ -26,6 +33,34 @@ export function SettingsPanel() {
       setLocalSettings(settings);
     }
   }, [settings]);
+
+  // Load dictionary status
+  useEffect(() => {
+    getDictionaryStatus().then(setDictStatus).catch(console.error);
+  }, []);
+
+  const handleDownloadDictionary = async () => {
+    setDictStatus((prev) => ({ ...prev, downloading: true, progress: 0 }));
+    try {
+      await downloadDictionary((progress) => {
+        setDictStatus((prev) => ({ ...prev, progress }));
+      });
+      const status = await getDictionaryStatus();
+      setDictStatus(status);
+    } catch (err) {
+      console.error('Download failed:', err);
+      setDictStatus((prev) => ({ ...prev, downloading: false }));
+    }
+  };
+
+  const handleDeleteDictionary = async () => {
+    try {
+      await deleteDictionary();
+      setDictStatus({ downloaded: false, downloading: false, progress: 0 });
+    } catch (err) {
+      console.error('Delete failed:', err);
+    }
+  };
 
   const handleSave = () => {
     if (localSettings) {
@@ -142,6 +177,76 @@ export function SettingsPanel() {
                 />
               </div>
             ))}
+          </div>
+        )}
+
+        {activeTab === 'dictionary' && (
+          <div className="dictionary-section">
+            <div className="dictionary-header">
+              <div className="dictionary-icon">
+                <Download size={24} />
+              </div>
+              <div className="dictionary-info">
+                <h3>ECDICT Dictionary</h3>
+                <p>3.4M entries with phonetics</p>
+              </div>
+            </div>
+
+            <div className="dictionary-card">
+              {dictStatus.downloaded ? (
+                <>
+                  <div className="dictionary-status-row">
+                    <div className="status-badge success">
+                      <Check size={14} />
+                      <span>Downloaded</span>
+                    </div>
+                    <span className="file-size">{dictStatus.fileSize}</span>
+                  </div>
+                  <p className="dictionary-hint">
+                    Word translation will use offline dictionary for faster results.
+                  </p>
+                  <button
+                    className="dictionary-action-btn danger"
+                    onClick={handleDeleteDictionary}
+                    disabled={dictStatus.downloading}
+                  >
+                    <Trash2 size={16} />
+                    <span>Delete Dictionary</span>
+                  </button>
+                </>
+              ) : dictStatus.downloading ? (
+                <>
+                  <div className="download-progress">
+                    <div className="progress-header">
+                      <span>Downloading...</span>
+                      <span className="progress-percent">{dictStatus.progress}%</span>
+                    </div>
+                    <div className="progress-track">
+                      <div className="progress-fill" style={{ width: `${dictStatus.progress}%` }} />
+                    </div>
+                  </div>
+                  <p className="dictionary-hint">
+                    Please wait while the dictionary is being downloaded.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="dictionary-status-row">
+                    <div className="status-badge">
+                      <span>Not Downloaded</span>
+                    </div>
+                    <span className="file-size">~93 MB</span>
+                  </div>
+                  <p className="dictionary-hint">
+                    Download for faster offline word translation with phonetics.
+                  </p>
+                  <button className="dictionary-action-btn" onClick={handleDownloadDictionary}>
+                    <Download size={16} />
+                    <span>Download Dictionary</span>
+                  </button>
+                </>
+              )}
+            </div>
           </div>
         )}
 

@@ -32,11 +32,11 @@ struct ChatResponse {
     choices: Vec<ChatChoice>,
 }
 
-pub async fn translate_text(text: &str, settings: &LlmSettings) -> Result<String> {
+pub async fn translate_text(text: &str, prompt: &str, settings: &LlmSettings) -> Result<String> {
     let client = Client::new();
 
     // Replace {{text}} placeholder with actual text and send as user message
-    let prompt = settings.system_prompt.replace("{{text}}", text);
+    let prompt = prompt.replace("{{text}}", text);
 
     let request = ChatRequest {
         model: settings.model.clone(),
