@@ -114,6 +114,9 @@ pub fn run() {
             commands::set_config,
             commands::validate_shortcut,
             commands::hide_window,
+            commands::get_favorites,
+            commands::add_favorite,
+            commands::delete_favorite,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

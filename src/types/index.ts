@@ -29,3 +29,11 @@ export interface TranslateResponse {
   // Corresponds to Rust: TranslateResponse in commands/translate.rs
   translated_text: string;
 }
+
+export interface FavoriteItem {
+  // Corresponds to Rust: FavoriteItem in config/favorites.rs
+  id: string;
+  original_text: string;
+  translated_text: string;
+  created_at: number; // Unix timestamp
+}
