@@ -125,6 +125,7 @@ pub fn run() {
             commands::get_dictionary_status,
             commands::download_dictionary,
             commands::delete_dictionary,
+            commands::cancel_dictionary_download,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

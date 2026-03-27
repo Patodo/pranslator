@@ -52,6 +52,16 @@ export interface DictionaryStatus {
   fileSize?: string;
 }
 
+export interface DownloadProgress {
+  progress: number;
+  downloaded: number;
+  total: number;
+  speed: string;
+}
+
+export const DICTIONARY_DOWNLOAD_URL =
+  'https://github.com/skywind3000/ECDICT/releases/download/1.0.28/ecdict-mdx-28.zip';
+
 export interface FavoriteItem {
   // Corresponds to Rust: FavoriteItem in config/favorites.rs
   id: string;

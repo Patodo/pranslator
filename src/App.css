@@ -1275,6 +1275,42 @@ body {
   transition: width 0.3s ease;
 }
 
+.progress-speed {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #1890ff;
+  text-align: center;
+}
+
+.manual-download-hint {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #e8e8e8;
+}
+
+.manual-download-hint p {
+  margin: 0;
+  font-size: 12px;
+  color: #666;
+  line-height: 1.6;
+}
+
+.manual-download-hint a {
+  color: #1890ff;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.manual-download-hint a:hover {
+  text-decoration: underline;
+}
+
+.manual-download-hint .hint-note {
+  margin-top: 4px;
+  color: #999;
+  font-style: italic;
+}
+
 /* Dark mode for Dictionary */
 @media (prefers-color-scheme: dark) {
   .dictionary-icon {
@@ -1346,5 +1382,25 @@ body {
 
   .progress-fill {
     background: #40a9ff;
+  }
+
+  .progress-speed {
+    color: #40a9ff;
+  }
+
+  .manual-download-hint {
+    border-top-color: #434343;
+  }
+
+  .manual-download-hint p {
+    color: #aaa;
+  }
+
+  .manual-download-hint a {
+    color: #40a9ff;
+  }
+
+  .manual-download-hint .hint-note {
+    color: #666;
   }
 }

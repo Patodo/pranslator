@@ -1,7 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Book, Check, Cloud, Download, Keyboard, Trash2 } from 'lucide-react';
-import type { DictionaryStatus, Settings } from '../types';
-import { deleteDictionary, downloadDictionary, getDictionaryStatus } from '../api/dictionary';
+import { Book, Check, Cloud, Download, Keyboard, Trash2, X } from 'lucide-react';
+import type { DictionaryStatus, DownloadProgress, Settings } from '../types';
+import { DICTIONARY_DOWNLOAD_URL } from '../types';
+import {
+  cancelDictionaryDownload,
+  deleteDictionary,
+  downloadDictionary,
+  getDictionaryStatus,
+} from '../api/dictionary';
 import { useSettingsStore } from '../stores/settings';
 import { GLOBAL_SHORTCUT_CONFIGS } from '../config/globalShortcuts';
 import { ShortcutInput } from './ShortcutInput';
@@ -23,6 +29,7 @@ export function SettingsPanel() {
     downloading: false,
     progress: 0,
   });
+  const [downloadSpeed, setDownloadSpeed] = useState('');
 
   useEffect(() => {
     loadSettings();
@@ -41,16 +48,26 @@ export function SettingsPanel() {
 
   const handleDownloadDictionary = async () => {
     setDictStatus((prev) => ({ ...prev, downloading: true, progress: 0 }));
+    setDownloadSpeed('');
     try {
-      await downloadDictionary((progress) => {
-        setDictStatus((prev) => ({ ...prev, progress }));
+      await downloadDictionary((progress: DownloadProgress) => {
+        setDictStatus((prev) => ({ ...prev, progress: progress.progress }));
+        setDownloadSpeed(progress.speed);
       });
       const status = await getDictionaryStatus();
       setDictStatus(status);
+      setDownloadSpeed('');
     } catch (err) {
       console.error('Download failed:', err);
       setDictStatus((prev) => ({ ...prev, downloading: false }));
+      setDownloadSpeed('');
     }
+  };
+
+  const handleCancelDownload = async () => {
+    await cancelDictionaryDownload();
+    setDictStatus((prev) => ({ ...prev, downloading: false, progress: 0 }));
+    setDownloadSpeed('');
   };
 
   const handleDeleteDictionary = async () => {
@@ -224,10 +241,13 @@ export function SettingsPanel() {
                     <div className="progress-track">
                       <div className="progress-fill" style={{ width: `${dictStatus.progress}%` }} />
                     </div>
+                    {downloadSpeed && <div className="progress-speed">{downloadSpeed}</div>}
                   </div>
-                  <p className="dictionary-hint">
-                    Please wait while the dictionary is being downloaded.
-                  </p>
+                  <p className="dictionary-hint">Downloading from GitHub. Please wait...</p>
+                  <button className="dictionary-action-btn danger" onClick={handleCancelDownload}>
+                    <X size={16} />
+                    <span>Cancel Download</span>
+                  </button>
                 </>
               ) : (
                 <>
@@ -244,6 +264,17 @@ export function SettingsPanel() {
                     <Download size={16} />
                     <span>Download Dictionary</span>
                   </button>
+                  <div className="manual-download-hint">
+                    <p>
+                      Or download manually:{' '}
+                      <a href={DICTIONARY_DOWNLOAD_URL} target="_blank" rel="noopener noreferrer">
+                        {DICTIONARY_DOWNLOAD_URL}
+                      </a>
+                    </p>
+                    <p className="hint-note">
+                      Extract the .mdx file to the config directory after downloading.
+                    </p>
+                  </div>
                 </>
               )}
             </div>

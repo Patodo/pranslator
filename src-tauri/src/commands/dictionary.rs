@@ -107,6 +107,11 @@ pub fn delete_dictionary(
     Ok(())
 }
 
+#[tauri::command]
+pub fn cancel_dictionary_download() {
+    dictionary::downloader::cancel_download();
+}
+
 /// Load dictionary at startup if it exists.
 pub fn load_dictionary_if_exists(app: &AppHandle) -> Option<Dictionary> {
     let config_dir = app.path().app_config_dir().ok()?;
