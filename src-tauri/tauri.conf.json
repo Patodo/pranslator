@@ -5,7 +5,7 @@
   "identifier": "com.pranslator.app",
   "build": {
     "beforeDevCommand": "npx vite",
-    "devUrl": "http://localhost:1420",
+    "devUrl": "http://localhost:1520",
     "beforeBuildCommand": "npm run build",
     "frontendDist": "../dist"
   },
