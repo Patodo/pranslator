@@ -114,3 +114,108 @@ impl Settings {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_util::TestEnv;
+
+    #[test]
+    fn test_default_settings_values() {
+        let settings = Settings::default();
+
+        assert_eq!(settings.llm.api_key, "");
+        assert_eq!(settings.llm.api_base, "https://api.openai.com/v1");
+        assert_eq!(settings.llm.model, "gpt-4o-mini");
+        assert_eq!(settings.llm.system_prompt, DEFAULT_SYSTEM_PROMPT);
+        assert_eq!(settings.shortcuts.toggle_window, "Alt+Shift+T");
+    }
+
+    #[test]
+    fn test_save_and_load_roundtrip() {
+        let _env = TestEnv::new();
+
+        let settings = Settings {
+            llm: LlmSettings {
+                api_key: "sk-test123".to_string(),
+                api_base: "https://custom.api.com/v1".to_string(),
+                model: "gpt-4".to_string(),
+                system_prompt: "Custom prompt".to_string(),
+            },
+            shortcuts: ShortcutSettings {
+                toggle_window: "Ctrl+Shift+T".to_string(),
+            },
+        };
+
+        settings.save().expect("save should succeed");
+        let loaded = Settings::load().expect("load should succeed");
+
+        assert_eq!(loaded.llm.api_key, "sk-test123");
+        assert_eq!(loaded.llm.api_base, "https://custom.api.com/v1");
+        assert_eq!(loaded.llm.model, "gpt-4");
+        assert_eq!(loaded.llm.system_prompt, "Custom prompt");
+        assert_eq!(loaded.shortcuts.toggle_window, "Ctrl+Shift+T");
+    }
+
+    #[test]
+    fn test_load_missing_file_creates_default() {
+        let _env = TestEnv::new();
+
+        // Ensure no config file exists
+        let path = Settings::config_path().unwrap();
+        assert!(!path.exists());
+
+        let settings = Settings::load().expect("load should succeed");
+
+        // Should have created a default config file
+        assert!(path.exists());
+        assert_eq!(settings.llm.model, "gpt-4o-mini");
+        assert_eq!(settings.shortcuts.toggle_window, "Alt+Shift+T");
+    }
+
+    #[test]
+    fn test_load_toml_missing_system_prompt() {
+        let _env = TestEnv::new();
+
+        // Simulate old config without system_prompt field
+        let old_toml = r#"
+api_key = "sk-old"
+api_base = "https://api.openai.com/v1"
+model = "gpt-3.5-turbo"
+"#;
+        let path = Settings::config_path().unwrap();
+        fs::write(&path, old_toml).expect("write should succeed");
+
+        let settings = Settings::load().expect("load should succeed");
+
+        // system_prompt should be populated with default value
+        assert_eq!(settings.llm.api_key, "sk-old");
+        assert_eq!(settings.llm.model, "gpt-3.5-turbo");
+        assert_eq!(settings.llm.system_prompt, DEFAULT_SYSTEM_PROMPT);
+    }
+
+    #[test]
+    fn test_load_corrupted_toml() {
+        let _env = TestEnv::new();
+
+        let path = Settings::config_path().unwrap();
+        fs::write(&path, "this is not valid toml {{{{").expect("write should succeed");
+
+        // Should not panic — graceful fallback
+        let settings = Settings::load().expect("load should succeed");
+
+        // Falls back to defaults for shortcuts; tries to recover LlmSettings
+        assert_eq!(settings.shortcuts.toggle_window, "Alt+Shift+T");
+    }
+
+    #[test]
+    fn test_config_dir_env_override() {
+        let env = TestEnv::new();
+
+        let config_dir = Settings::config_dir().expect("config_dir should succeed");
+        assert!(config_dir.starts_with(env.dir.path()));
+
+        let config_path = Settings::config_path().expect("config_path should succeed");
+        assert!(config_path.ends_with("settings.toml"));
+    }
+}

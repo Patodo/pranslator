@@ -130,3 +130,33 @@ pub fn run() {
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
+
+#[cfg(test)]
+pub(crate) mod test_util {
+    use std::sync::MutexGuard;
+
+    static CONFIG_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
+    pub struct TestEnv {
+        pub dir: tempfile::TempDir,
+        _guard: MutexGuard<'static, ()>,
+    }
+
+    impl TestEnv {
+        pub fn new() -> Self {
+            let guard = CONFIG_LOCK.lock().expect("config lock poisoned");
+            let dir = tempfile::tempdir().expect("failed to create temp dir");
+            std::env::set_var("PRANSLATOR_CONFIG_PATH", dir.path());
+            TestEnv {
+                dir,
+                _guard: guard,
+            }
+        }
+    }
+
+    impl Drop for TestEnv {
+        fn drop(&mut self) {
+            std::env::remove_var("PRANSLATOR_CONFIG_PATH");
+        }
+    }
+}

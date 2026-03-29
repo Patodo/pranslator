@@ -8,6 +8,11 @@ pub struct Dictionary {
 }
 
 impl Dictionary {
+    #[cfg(test)]
+    pub fn from_entries(entries: HashMap<String, String>) -> Self {
+        Dictionary { entries }
+    }
+
     pub fn open(path: &Path) -> Result<Self> {
         if !path.exists() {
             return Err(anyhow!("Dictionary file not found: {:?}", path));
@@ -50,10 +55,42 @@ impl Dictionary {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashMap;
 
     #[test]
     fn test_dict_not_exists() {
         let result = Dictionary::open(Path::new("/nonexistent/path.mdx"));
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_lookup_case_insensitive() {
+        let mut entries = HashMap::new();
+        entries.insert("hello".to_string(), "你好".to_string());
+        let dict = Dictionary::from_entries(entries);
+
+        assert_eq!(dict.lookup("hello"), Some("你好".to_string()));
+        assert_eq!(dict.lookup("Hello"), Some("你好".to_string()));
+        assert_eq!(dict.lookup("HELLO"), Some("你好".to_string()));
+    }
+
+    #[test]
+    fn test_lookup_trims_whitespace() {
+        let mut entries = HashMap::new();
+        entries.insert("hello".to_string(), "你好".to_string());
+        let dict = Dictionary::from_entries(entries);
+
+        assert_eq!(dict.lookup("  hello  "), Some("你好".to_string()));
+        assert_eq!(dict.lookup("\thello\n"), Some("你好".to_string()));
+    }
+
+    #[test]
+    fn test_lookup_nonexistent_returns_none() {
+        let mut entries = HashMap::new();
+        entries.insert("hello".to_string(), "你好".to_string());
+        let dict = Dictionary::from_entries(entries);
+
+        assert_eq!(dict.lookup("goodbye"), None);
+        assert_eq!(dict.lookup(""), None);
     }
 }

@@ -202,3 +202,54 @@ pub fn delete_dictionary(config_dir: &Path) -> Result<()> {
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_format_speed_mb() {
+        assert_eq!(format_speed(5.0 * 1024.0 * 1024.0), "5.0 MB/s");
+        assert_eq!(format_speed(1.5 * 1024.0 * 1024.0), "1.5 MB/s");
+        assert_eq!(format_speed(1024.0 * 1024.0), "1.0 MB/s");
+    }
+
+    #[test]
+    fn test_format_speed_kb() {
+        assert_eq!(format_speed(512.0 * 1024.0), "512 KB/s");
+        assert_eq!(format_speed(1024.0), "1 KB/s");
+    }
+
+    #[test]
+    fn test_format_speed_bytes() {
+        assert_eq!(format_speed(500.0), "500 B/s");
+        assert_eq!(format_speed(1.0), "1 B/s");
+    }
+
+    #[test]
+    fn test_format_speed_zero() {
+        assert_eq!(format_speed(0.0), "0 B/s");
+    }
+
+    #[test]
+    fn test_cancel_flag() {
+        // Reset first to ensure clean state
+        reset_cancel_flag();
+        assert!(!is_cancelled());
+
+        cancel_download();
+        assert!(is_cancelled());
+
+        // Cleanup
+        reset_cancel_flag();
+    }
+
+    #[test]
+    fn test_reset_cancel_flag() {
+        cancel_download();
+        assert!(is_cancelled());
+
+        reset_cancel_flag();
+        assert!(!is_cancelled());
+    }
+}

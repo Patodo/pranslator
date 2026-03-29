@@ -15,3 +15,30 @@ pub fn get_dict_path(config_dir: &Path) -> PathBuf {
 pub fn is_dict_downloaded(config_dir: &Path) -> bool {
     get_dict_path(config_dir).exists()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    #[test]
+    fn test_get_dict_path() {
+        let dir = Path::new("/tmp/test-config");
+        let path = get_dict_path(dir);
+        assert_eq!(path, Path::new("/tmp/test-config/ecdict-28.mdx"));
+    }
+
+    #[test]
+    fn test_is_dict_downloaded_false() {
+        let dir = tempfile::tempdir().expect("failed to create temp dir");
+        assert!(!is_dict_downloaded(dir.path()));
+    }
+
+    #[test]
+    fn test_is_dict_downloaded_true() {
+        let dir = tempfile::tempdir().expect("failed to create temp dir");
+        let dict_path = get_dict_path(dir.path());
+        fs::write(&dict_path, "dummy").expect("write should succeed");
+        assert!(is_dict_downloaded(dir.path()));
+    }
+}
