@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Context, Result};
 use futures::StreamExt;
-use reqwest::Client;
-use std::fs::{self, File};
+use reqwest::{Client, StatusCode};
+use std::fs::{self, File, OpenOptions};
 use std::io::{self, Write};
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -38,12 +38,111 @@ pub struct DownloadProgress {
     pub speed: String,
 }
 
-/// Download and extract the MDX dictionary.
-/// Reports progress via Tauri events.
-pub async fn download_dictionary(app: AppHandle, config_dir: &Path) -> Result<()> {
-    reset_cancel_flag();
+/// Download a file with resume support.
+///
+/// If the destination file already exists, sends an HTTP Range request to
+/// resume from the current file size. Falls back to a full download if the
+/// server does not support Range.
+///
+/// On cancellation, the partial file is preserved for future resume.
+pub async fn download_to_file(
+    url: &str,
+    dest: &Path,
+    fallback_total: u64,
+    on_progress: impl Fn(u8, u64, u64, &str),
+) -> Result<()> {
+    let resume_offset = if dest.exists() {
+        fs::metadata(dest).map(|m| m.len()).unwrap_or(0)
+    } else {
+        0
+    };
 
     let client = Client::new();
+    let mut request = client.get(url);
+
+    if resume_offset > 0 {
+        request = request.header("Range", format!("bytes={}-", resume_offset));
+    }
+
+    let response = request
+        .send()
+        .await
+        .with_context(|| "Failed to start download")?;
+
+    let status = response.status();
+
+    // Determine whether we are resuming or starting fresh
+    let (file, mut downloaded, total_size) = if status == StatusCode::PARTIAL_CONTENT {
+        // Server supports resume — append to existing file
+        let total = response
+            .headers()
+            .get("Content-Range")
+            .and_then(|v| v.to_str().ok())
+            .and_then(|v| v.split('/').last())
+            .and_then(|v| v.parse::<u64>().ok())
+            .unwrap_or(fallback_total);
+
+        let file = OpenOptions::new().append(true).open(dest)
+            .with_context(|| "Failed to open partial file for append")?;
+
+        (file, resume_offset, total)
+    } else {
+        // Server returned 200 or doesn't support Range — start from scratch
+        let total = response.content_length().unwrap_or(fallback_total);
+        let file = File::create(dest)
+            .with_context(|| "Failed to create temp file")?;
+
+        (file, 0u64, total)
+    };
+
+    let mut file = file;
+    let mut stream = response.bytes_stream();
+
+    let start_time = Instant::now();
+    let mut last_emit_time = Instant::now();
+    // Only measure speed for bytes downloaded in this session
+    let session_start_bytes = downloaded;
+
+    while let Some(chunk) = stream.next().await {
+        if is_cancelled() {
+            // Keep partial file for future resume
+            return Err(anyhow!("Download cancelled by user"));
+        }
+
+        let chunk = chunk.with_context(|| "Failed to read chunk")?;
+        file.write_all(&chunk).with_context(|| "Failed to write chunk")?;
+        downloaded += chunk.len() as u64;
+
+        let now = Instant::now();
+        if now.duration_since(last_emit_time) >= Duration::from_millis(100) {
+            let progress = ((downloaded as f64 / total_size as f64) * 100.0).min(100.0) as u8;
+
+            let elapsed = now.duration_since(start_time).as_secs_f64();
+            let speed = if elapsed > 0.0 {
+                let session_bytes = downloaded - session_start_bytes;
+                format_speed(session_bytes as f64 / elapsed)
+            } else {
+                "0 B/s".to_string()
+            };
+
+            on_progress(progress, downloaded, total_size, &speed);
+            last_emit_time = now;
+        }
+    }
+
+    if is_cancelled() {
+        return Err(anyhow!("Download cancelled by user"));
+    }
+
+    on_progress(100, downloaded, total_size, "Extracting...");
+
+    Ok(())
+}
+
+/// Download and extract the MDX dictionary.
+/// Reports progress via Tauri events. Supports resume on cancellation.
+pub async fn download_dictionary(app: AppHandle, config_dir: &Path) -> Result<()> {
+    reset_cancel_flag();
 
     // Create temp directory for download
     let temp_dir = std::env::temp_dir().join("pranslator-dict-download");
@@ -52,85 +151,21 @@ pub async fn download_dictionary(app: AppHandle, config_dir: &Path) -> Result<()
 
     let zip_path = temp_dir.join(DICT_ZIP_FILENAME);
 
-    // Download the zip file with progress
-    let response = client
-        .get(DICT_URL)
-        .send()
-        .await
-        .with_context(|| "Failed to start download")?;
+    let on_progress = |progress: u8, downloaded: u64, total: u64, speed: &str| {
+        let _ = app.emit("dictionary-download-progress", DownloadProgress {
+            progress,
+            downloaded,
+            total,
+            speed: speed.to_string(),
+        });
+    };
 
-    if !response.status().is_success() {
-        return Err(anyhow!("Download failed with status: {}", response.status()));
-    }
-
-    let total_size = response.content_length().unwrap_or(DICT_FILE_SIZE);
-    let mut downloaded: u64 = 0;
-    let mut stream = response.bytes_stream();
-    let mut file = File::create(&zip_path)
-        .with_context(|| "Failed to create temp file")?;
-
-    let start_time = Instant::now();
-    let mut last_emit_time = Instant::now();
-
-    while let Some(chunk) = stream.next().await {
-        // Check for cancellation
-        if is_cancelled() {
-            // Cleanup temp files
-            let _ = fs::remove_file(&zip_path);
-            let _ = fs::remove_dir(&temp_dir);
-            return Err(anyhow!("Download cancelled by user"));
-        }
-
-        let chunk = chunk.with_context(|| "Failed to read chunk")?;
-        file.write_all(&chunk)
-            .with_context(|| "Failed to write chunk")?;
-        downloaded += chunk.len() as u64;
-
-        // Emit progress event (throttled to ~10Hz)
-        let now = Instant::now();
-        if now.duration_since(last_emit_time) >= Duration::from_millis(100) {
-            let progress = ((downloaded as f64 / total_size as f64) * 100.0).min(100.0) as u8;
-
-            // Calculate speed
-            let elapsed = now.duration_since(start_time).as_secs_f64();
-            let speed = if elapsed > 0.0 {
-                let bytes_per_sec = downloaded as f64 / elapsed;
-                format_speed(bytes_per_sec)
-            } else {
-                "0 B/s".to_string()
-            };
-
-            let payload = DownloadProgress {
-                progress,
-                downloaded,
-                total: total_size,
-                speed,
-            };
-
-            let _ = app.emit("dictionary-download-progress", payload);
-            last_emit_time = now;
-        }
-    }
-
-    // Check again after download completes
-    if is_cancelled() {
-        let _ = fs::remove_file(&zip_path);
-        let _ = fs::remove_dir(&temp_dir);
-        return Err(anyhow!("Download cancelled by user"));
-    }
-
-    // Emit final progress
-    let _ = app.emit("dictionary-download-progress", DownloadProgress {
-        progress: 100,
-        downloaded,
-        total: total_size,
-        speed: "Extracting...".to_string(),
-    });
+    download_to_file(DICT_URL, &zip_path, DICT_FILE_SIZE, on_progress).await?;
 
     // Extract the MDX file from zip
     extract_mdx_from_zip(&zip_path, config_dir)?;
 
-    // Cleanup temp files
+    // Cleanup temp files after successful extraction
     let _ = fs::remove_file(&zip_path);
     let _ = fs::remove_dir(&temp_dir);
 
@@ -251,5 +286,98 @@ mod tests {
 
         reset_cancel_flag();
         assert!(!is_cancelled());
+    }
+
+    // --- Resume download tests ---
+
+    /// Business requirement: when a partial file exists, download resumes from
+    /// where it left off using HTTP Range, and appends to the existing file.
+    #[tokio::test]
+    async fn test_resume_from_partial_file() {
+        let mut server = mockito::Server::new_async().await;
+        reset_cancel_flag();
+
+        let temp_dir = tempfile::tempdir().expect("failed to create temp dir");
+        let zip_path = temp_dir.path().join(DICT_ZIP_FILENAME);
+        let config_dir = temp_dir.path().join("config");
+        fs::create_dir_all(&config_dir).unwrap();
+
+        // Simulate 4 bytes already downloaded
+        fs::write(&zip_path, b"dead").unwrap();
+
+        // Server should receive a Range request and respond with 206
+        let mock = server
+            .mock("GET", "/dict.zip")
+            .match_header("Range", "bytes=4-")
+            .with_status(206)
+            .with_header("Content-Range", "bytes 4-7/8")
+            .with_body(b"beef")
+            .create_async()
+            .await;
+
+        let url = format!("{}/dict.zip", server.url());
+        let result = download_to_file(&url, &zip_path, DICT_FILE_SIZE, |_, _, _, _| {}).await;
+
+        mock.assert_async().await;
+        assert!(result.is_ok(), "download should succeed");
+
+        // File should contain both the old and new data
+        let content = fs::read(&zip_path).unwrap();
+        assert_eq!(content, b"deadbeef", "file should contain appended data");
+    }
+
+    /// Business requirement: if the server does not support Range (returns 200),
+    /// the download starts from scratch and overwrites the partial file.
+    #[tokio::test]
+    async fn test_resume_server_returns_200() {
+        let mut server = mockito::Server::new_async().await;
+        reset_cancel_flag();
+
+        let temp_dir = tempfile::tempdir().expect("failed to create temp dir");
+        let zip_path = temp_dir.path().join(DICT_ZIP_FILENAME);
+
+        // Simulate stale partial data
+        fs::write(&zip_path, b"stale").unwrap();
+
+        // Server ignores Range and returns full content with 200
+        let mock = server
+            .mock("GET", "/dict.zip")
+            .with_status(200)
+            .with_body(b"fresh")
+            .create_async()
+            .await;
+
+        let url = format!("{}/dict.zip", server.url());
+        let result = download_to_file(&url, &zip_path, DICT_FILE_SIZE, |_, _, _, _| {}).await;
+
+        mock.assert_async().await;
+        assert!(result.is_ok());
+
+        // File should contain only the new data, not the stale prefix
+        let content = fs::read(&zip_path).unwrap();
+        assert_eq!(content, b"fresh", "file should be overwritten, not appended");
+    }
+
+    /// Business requirement: cancelling a download preserves the partial temp
+    /// file so that a subsequent download can resume from where it stopped.
+    #[tokio::test]
+    async fn test_cancel_preserves_temp_file() {
+        reset_cancel_flag();
+
+        let temp_dir = tempfile::tempdir().expect("failed to create temp dir");
+        let zip_path = temp_dir.path().join(DICT_ZIP_FILENAME);
+
+        // Write a fake partial file
+        fs::write(&zip_path, b"partial-data").unwrap();
+        let size_before = fs::metadata(&zip_path).unwrap().len();
+        assert!(size_before > 0);
+
+        // Trigger cancel
+        cancel_download();
+
+        // Verify file still exists
+        assert!(zip_path.exists(), "partial file should be preserved after cancel");
+
+        reset_cancel_flag();
     }
 }
