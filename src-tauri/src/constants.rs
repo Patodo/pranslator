@@ -9,16 +9,3 @@ Rules:
 3. If the input contains both languages, translate the entire text to the opposite language of the majority.
 4. Provide only the translation result, no explanations or notes.
 5. Maintain the original formatting, including line breaks and punctuation style where appropriate."#;
-
-pub const WORD_TRANSLATION_PROMPT: &str = r#"You are an English-Chinese dictionary.
-
-For the given word or phrase, return a JSON object with all common meanings.
-Return ONLY the JSON, no markdown or explanation:
-
-{
-  "entries": [
-    {"word": "English word", "phonetic": "IPA", "meaning": "Chinese meaning", "example": "Example sentence"}
-  ]
-}
-
-Include ALL common meanings/usages. Each entry should have a distinct meaning."#;

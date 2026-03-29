@@ -13,8 +13,11 @@ import './App.css';
 
 type PageState = 'home' | 'settings' | 'settings-to-home' | 'favorites' | 'favorites-to-home';
 
+type SettingsTab = 'api' | 'shortcuts' | 'dictionary';
+
 function App() {
   const [pageState, setPageState] = useState<PageState>('home');
+  const [settingsTab, setSettingsTab] = useState<SettingsTab>('api');
   const {
     inputText,
     outputText,
@@ -25,6 +28,7 @@ function App() {
     favoriteState,
     translationMode,
     wordData,
+    dictDownloaded,
     setInputText,
     setTranslationMode,
     handleTranslate,
@@ -36,6 +40,11 @@ function App() {
   } = TranslationPanel();
 
   const goToSettings = () => {
+    setPageState('settings');
+  };
+
+  const goToDictionarySettings = () => {
+    setSettingsTab('dictionary');
     setPageState('settings');
   };
 
@@ -108,7 +117,7 @@ function App() {
             </button>
           </div>
           <div className="page-content">
-            <SettingsPanel />
+            <SettingsPanel initialTab={settingsTab} />
           </div>
         </div>
       ) : showFavorites ? (
@@ -175,6 +184,8 @@ function App() {
               isLeaderMode={isLeaderMode}
               translationMode={translationMode}
               wordData={wordData}
+              dictDownloaded={dictDownloaded}
+              onGoToDictionarySettings={goToDictionarySettings}
               setInputText={setInputText}
               handleKeyDown={handleKeyDown}
               handleCopy={handleCopy}

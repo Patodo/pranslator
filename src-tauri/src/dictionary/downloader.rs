@@ -144,8 +144,10 @@ pub async fn download_to_file(
 pub async fn download_dictionary(app: AppHandle, config_dir: &Path) -> Result<()> {
     reset_cancel_flag();
 
-    // Create temp directory for download
+    // Clean up stale temp files from previous downloads to prevent
+    // corrupted zips from resume mechanism, then create fresh temp dir.
     let temp_dir = std::env::temp_dir().join("pranslator-dict-download");
+    let _ = fs::remove_dir_all(&temp_dir);
     fs::create_dir_all(&temp_dir)
         .with_context(|| "Failed to create temp directory")?;
 

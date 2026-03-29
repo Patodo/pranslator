@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Book, Check, Cloud, Download, Keyboard, Trash2, X } from 'lucide-react';
 import type { DictionaryStatus, DownloadProgress, Settings } from '../types';
 import { DICTIONARY_DOWNLOAD_URL } from '../types';
@@ -20,10 +20,19 @@ const tabs: { id: TabId; label: string; icon: typeof Cloud }[] = [
   { id: 'dictionary', label: 'Dictionary', icon: Book },
 ];
 
-export function SettingsPanel() {
+export function SettingsPanel({ initialTab }: { initialTab?: TabId } = {}) {
   const { settings, loadSettings, updateSettings, isLoading, error } = useSettingsStore();
   const [localSettings, setLocalSettings] = useState<Settings | null>(null);
-  const [activeTab, setActiveTab] = useState<TabId>('api');
+  const [activeTab, setActiveTab] = useState<TabId>(initialTab ?? 'api');
+
+  const initialTabApplied = useRef(false);
+
+  useEffect(() => {
+    if (initialTab && !initialTabApplied.current) {
+      setActiveTab(initialTab);
+      initialTabApplied.current = true;
+    }
+  }, [initialTab]);
   const [dictStatus, setDictStatus] = useState<DictionaryStatus>({
     downloaded: false,
     downloading: false,
@@ -59,7 +68,14 @@ export function SettingsPanel() {
       setDownloadSpeed('');
     } catch (err) {
       console.error('Download failed:', err);
-      setDictStatus((prev) => ({ ...prev, downloading: false }));
+      // Refresh actual status from backend — the file may have been
+      // extracted even though Dictionary::open failed afterwards.
+      try {
+        const status = await getDictionaryStatus();
+        setDictStatus(status);
+      } catch {
+        setDictStatus((prev) => ({ ...prev, downloading: false }));
+      }
       setDownloadSpeed('');
     }
   };

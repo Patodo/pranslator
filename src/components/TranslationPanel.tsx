@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
+import { Book } from 'lucide-react';
 import { translate } from '../api/translate';
+import { getDictionaryStatus } from '../api/dictionary';
 import { useFavoritesStore } from '../stores/favorites';
 import { DURATIONS } from '../constants/animations';
 import type { TranslationMode, WordResponse } from '../types';
@@ -19,8 +21,15 @@ export function TranslationPanel() {
   const [favoriteState, setFavoriteState] = useState<FavoriteState>('idle');
   const [translationMode, setTranslationMode] = useState<TranslationMode>('normal');
   const [wordData, setWordData] = useState<WordResponse | null>(null);
+  const [dictDownloaded, setDictDownloaded] = useState(false);
 
   const addFavorite = useFavoritesStore((state) => state.addFavorite);
+
+  useEffect(() => {
+    getDictionaryStatus()
+      .then((s) => setDictDownloaded(s.downloaded))
+      .catch(() => {});
+  }, []);
 
   const handleTranslate = async () => {
     if (!inputText.trim()) return;
@@ -113,6 +122,7 @@ export function TranslationPanel() {
     favoriteState,
     translationMode,
     wordData,
+    dictDownloaded,
     setInputText,
     setTranslationMode,
     handleTranslate,
@@ -170,10 +180,12 @@ export function TranslationView({
   isLeaderMode,
   translationMode,
   wordData,
+  dictDownloaded,
   setInputText,
   handleKeyDown,
   handleCopy,
   handleClear,
+  onGoToDictionarySettings,
 }: {
   inputText: string;
   outputText: string;
@@ -183,10 +195,12 @@ export function TranslationView({
   isLeaderMode: boolean;
   translationMode: TranslationMode;
   wordData: WordResponse | null;
+  dictDownloaded: boolean;
   setInputText: (text: string) => void;
   handleKeyDown: (e: React.KeyboardEvent) => void;
   handleCopy: () => void;
   handleClear: () => void;
+  onGoToDictionarySettings: () => void;
 }) {
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const outputRef = useRef<HTMLTextAreaElement>(null);
@@ -340,6 +354,19 @@ export function TranslationView({
           </button>
         </div>
       </div>
+      {/* Dictionary required overlay for word mode */}
+      {translationMode === 'word' && !dictDownloaded && (
+        <div className="dict-required-overlay">
+          <div className="dict-required-card">
+            <Book size={32} />
+            <h3>Offline Dictionary Required</h3>
+            <p>Word mode needs an offline dictionary for word lookup.</p>
+            <button className="dict-required-btn" onClick={onGoToDictionarySettings}>
+              Go to Download
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

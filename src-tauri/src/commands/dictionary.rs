@@ -45,11 +45,12 @@ pub fn get_dictionary_status(
         None
     };
 
-    // Check if dictionary is loaded in memory
-    let is_loaded = dict_state.lock().map(|d| d.is_some()).unwrap_or(false);
+    // `dict_state` is kept in the signature so Tauri injects the managed
+    // state, but the downloaded flag now purely reflects file existence.
+    let _ = dict_state;
 
     DictionaryStatus {
-        downloaded: downloaded && is_loaded,
+        downloaded,
         downloading: false, // This is tracked on frontend
         progress: 0,
         file_size,

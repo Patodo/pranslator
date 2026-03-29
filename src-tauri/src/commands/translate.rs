@@ -3,7 +3,6 @@ use std::sync::Mutex;
 use tauri::State;
 
 use crate::config::{LlmSettings, Settings};
-use crate::constants::WORD_TRANSLATION_PROMPT;
 use crate::dictionary::reader::Dictionary;
 use crate::llm::client;
 
@@ -34,26 +33,25 @@ pub fn resolve_translation_route(
     dict: Option<&Dictionary>,
     llm_settings: &LlmSettings,
 ) -> Result<TranslationRoute, String> {
-    // For word mode, try dictionary first
+    // Word mode: dictionary only, no LLM fallback
     if mode == Some("word") {
-        if let Some(dict) = dict {
-            if let Some(result) = dict.lookup(text) {
-                return Ok(TranslationRoute::Dictionary(result));
-            }
-        }
+        let dict = dict.ok_or_else(|| {
+            "Word mode requires offline dictionary. Please download it in Settings.".to_string()
+        })?;
+        return dict
+            .lookup(text)
+            .map(TranslationRoute::Dictionary)
+            .ok_or_else(|| "Word not found in dictionary".to_string());
     }
 
+    // Normal mode: always LLM
     if llm_settings.api_key.is_empty() {
         return Err("API key not configured. Please set your API key in settings.".to_string());
     }
 
-    let prompt = if mode == Some("word") {
-        WORD_TRANSLATION_PROMPT.to_string()
-    } else {
-        llm_settings.system_prompt.clone()
-    };
-
-    Ok(TranslationRoute::Llm { prompt })
+    Ok(TranslationRoute::Llm {
+        prompt: llm_settings.system_prompt.clone(),
+    })
 }
 
 #[tauri::command]
@@ -97,7 +95,7 @@ pub async fn translate(
 mod tests {
     use super::*;
     use crate::config::LlmSettings;
-    use crate::constants::{DEFAULT_SYSTEM_PROMPT, WORD_TRANSLATION_PROMPT};
+    use crate::constants::DEFAULT_SYSTEM_PROMPT;
     use std::collections::HashMap;
 
     fn test_llm_settings() -> LlmSettings {
@@ -129,28 +127,32 @@ mod tests {
     }
 
     #[test]
-    fn test_word_mode_dict_miss_falls_to_llm() {
+    fn test_word_mode_dict_miss_returns_error() {
         let dict = test_dict_with_word("hello", "你好");
         let settings = test_llm_settings();
 
         let route = resolve_translation_route("goodbye", Some("word"), Some(&dict), &settings);
 
-        match route.unwrap() {
-            TranslationRoute::Llm { prompt } => assert_eq!(prompt, WORD_TRANSLATION_PROMPT),
-            other => panic!("Expected Llm, got: {:?}", route_name(&other)),
-        }
+        assert!(route.is_err());
+        let err = route.unwrap_err();
+        assert!(
+            err.contains("Word not found"),
+            "Expected 'Word not found' error, got: {err}"
+        );
     }
 
     #[test]
-    fn test_word_mode_no_dict_uses_word_prompt() {
+    fn test_word_mode_no_dict_returns_error() {
         let settings = test_llm_settings();
 
         let route = resolve_translation_route("hello", Some("word"), None, &settings);
 
-        match route.unwrap() {
-            TranslationRoute::Llm { prompt } => assert_eq!(prompt, WORD_TRANSLATION_PROMPT),
-            other => panic!("Expected Llm, got: {:?}", route_name(&other)),
-        }
+        assert!(route.is_err());
+        let err = route.unwrap_err();
+        assert!(
+            err.contains("offline dictionary"),
+            "Expected dictionary required error, got: {err}"
+        );
     }
 
     #[test]
