@@ -314,7 +314,11 @@ export function TranslationView({
                   <tbody>
                     <tr>
                       <td colSpan={4} className="empty-hint">
-                        {status === 'loading' ? 'Looking up...' : 'Enter a word to look up'}
+                        {status === 'error'
+                          ? outputText
+                          : status === 'loading'
+                            ? 'Looking up...'
+                            : 'Enter a word to look up'}
                       </td>
                     </tr>
                   </tbody>

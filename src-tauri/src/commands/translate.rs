@@ -1,10 +1,46 @@
 use serde::{Deserialize, Serialize};
+use std::path::Path;
 use std::sync::Mutex;
-use tauri::State;
+use tauri::{Manager, State};
 
 use crate::config::{LlmSettings, Settings};
-use crate::dictionary::reader::Dictionary;
+use crate::dictionary::{self, reader::Dictionary};
 use crate::llm::client;
+
+/// Structured word entry returned by dictionary lookups.
+#[derive(Debug, Serialize)]
+pub struct WordEntry {
+    pub word: String,
+    pub phonetic: String,
+    pub meaning: String,
+    pub example: String,
+}
+
+/// Word-mode response containing one or more dictionary entries.
+#[derive(Debug, Serialize)]
+pub struct WordResponse {
+    pub entries: Vec<WordEntry>,
+}
+
+/// Strip HTML tags from a string, keeping only the text content.
+fn strip_html_tags(html: &str) -> String {
+    let mut result = String::with_capacity(html.len());
+    let mut in_tag = false;
+    for c in html.chars() {
+        match c {
+            '<' => in_tag = true,
+            '>' => in_tag = false,
+            _ if !in_tag => result.push(c),
+            _ => {}
+        }
+    }
+    // Collapse consecutive whitespace
+    let collapsed: String = result
+        .split_whitespace()
+        .collect::<Vec<_>>()
+        .join(" ");
+    collapsed.trim().to_string()
+}
 
 #[derive(Debug, Deserialize)]
 pub struct TranslateRequest {
@@ -54,12 +90,59 @@ pub fn resolve_translation_route(
     })
 }
 
+/// Ensure the dictionary is loaded into memory if the file exists on disk.
+/// This handles the case where `Dictionary::open` failed at startup but the
+/// file is present (e.g. downloaded in a previous session).
+fn ensure_dict_loaded(
+    dict: &Mutex<Option<Dictionary>>,
+    config_dir: &Path,
+) -> Result<(), String> {
+    {
+        let guard = dict.lock().map_err(|e| e.to_string())?;
+        if guard.is_some() {
+            return Ok(());
+        }
+    }
+
+    // File doesn't exist — nothing to load
+    if !dictionary::is_dict_downloaded(config_dir) {
+        return Ok(());
+    }
+
+    // Try to load
+    let dict_path = dictionary::get_dict_path(config_dir);
+    match Dictionary::open(&dict_path) {
+        Ok(loaded) => {
+            let mut guard = dict.lock().map_err(|e| e.to_string())?;
+            *guard = Some(loaded);
+            Ok(())
+        }
+        Err(e) => {
+            // Auto-delete corrupted file so the user can re-download
+            let _ = std::fs::remove_file(&dict_path);
+            Err(format!(
+                "Dictionary file was corrupted and has been removed: {}. \
+                 Please re-download in Settings.",
+                e
+            ))
+        }
+    }
+}
+
 #[tauri::command]
 pub async fn translate(
+    app: tauri::AppHandle,
     request: TranslateRequest,
     settings: State<'_, Mutex<Settings>>,
     dict: State<'_, Mutex<Option<Dictionary>>>,
 ) -> Result<TranslateResponse, String> {
+    // Lazy-load dictionary if file exists but isn't in memory
+    let config_dir = app
+        .path()
+        .app_config_dir()
+        .map_err(|e| e.to_string())?;
+    ensure_dict_loaded(&dict, &config_dir)?;
+
     let (route, llm_settings) = {
         let settings = settings.lock().map_err(|e| e.to_string())?;
         let dict_guard = dict.lock().map_err(|e| e.to_string())?;
@@ -73,10 +156,23 @@ pub async fn translate(
     };
 
     match route {
-        TranslationRoute::Dictionary(result) => Ok(TranslateResponse {
-            translated_text: result,
-            source: Some("dictionary".to_string()),
-        }),
+        TranslationRoute::Dictionary(raw) => {
+            let plain = strip_html_tags(&raw);
+            let response = WordResponse {
+                entries: vec![WordEntry {
+                    word: request.text.clone(),
+                    phonetic: String::new(),
+                    meaning: plain,
+                    example: String::new(),
+                }],
+            };
+            let translated_text =
+                serde_json::to_string(&response).map_err(|e| e.to_string())?;
+            Ok(TranslateResponse {
+                translated_text,
+                source: Some("dictionary".to_string()),
+            })
+        }
         TranslationRoute::Llm { prompt } => {
             let translated_text =
                 client::translate_text(&request.text, &prompt, &llm_settings)
@@ -200,5 +296,249 @@ mod tests {
             TranslationRoute::Dictionary(_) => "Dictionary",
             TranslationRoute::Llm { .. } => "Llm",
         }
+    }
+
+    // --- strip_html_tags tests ---
+
+    #[test]
+    fn test_strip_html_basic_tags() {
+        assert_eq!(strip_html_tags("<b>hello</b>"), "hello");
+        assert_eq!(
+            strip_html_tags("<div>你好</div>"),
+            "你好"
+        );
+    }
+
+    #[test]
+    fn test_strip_html_nested_tags() {
+        assert_eq!(
+            strip_html_tags("<ul><li><b>hello</b></li></ul>"),
+            "hello"
+        );
+    }
+
+    #[test]
+    fn test_strip_html_no_tags() {
+        assert_eq!(strip_html_tags("plain text"), "plain text");
+    }
+
+    #[test]
+    fn test_strip_html_empty() {
+        assert_eq!(strip_html_tags(""), "");
+    }
+
+    #[test]
+    fn test_strip_html_collapses_whitespace() {
+        assert_eq!(
+            strip_html_tags("<p>  hello   world  </p>"),
+            "hello world"
+        );
+    }
+
+    #[test]
+    fn test_strip_html_preserves_entities() {
+        // HTML entities are not decoded, just tags stripped
+        assert_eq!(strip_html_tags("a &amp; b"), "a &amp; b");
+    }
+
+    // --- WordResponse JSON format tests ---
+
+    #[test]
+    fn test_word_mode_dict_hit_returns_word_response_json() {
+        let dict = test_dict_with_word(
+            "hello",
+            "<ul><li>/həˈloʊ/</li><li>used as a greeting</li></ul>",
+        );
+        let settings = test_llm_settings();
+
+        let route =
+            resolve_translation_route("hello", Some("word"), Some(&dict), &settings);
+
+        match route.unwrap() {
+            TranslationRoute::Dictionary(raw) => {
+                // The raw value should be the HTML from the dictionary
+                assert!(raw.contains("greeting"));
+
+                // Verify strip_html_tags produces clean text
+                let plain = strip_html_tags(&raw);
+                assert!(!plain.contains('<'));
+                assert!(plain.contains("greeting"));
+
+                // Verify the WordResponse structure can be serialized
+                let response = WordResponse {
+                    entries: vec![WordEntry {
+                        word: "hello".to_string(),
+                        phonetic: String::new(),
+                        meaning: plain,
+                        example: String::new(),
+                    }],
+                };
+                let json = serde_json::to_string(&response).unwrap();
+                let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+                assert_eq!(parsed["entries"][0]["word"], "hello");
+                assert!(parsed["entries"][0]["meaning"].as_str().unwrap().contains("greeting"));
+            }
+            other => panic!("Expected Dictionary, got: {:?}", route_name(&other)),
+        }
+    }
+
+    #[test]
+    fn test_word_response_json_matches_frontend_type() {
+        let response = WordResponse {
+            entries: vec![WordEntry {
+                word: "hello".to_string(),
+                phonetic: "/həˈloʊ/".to_string(),
+                meaning: "used as a greeting".to_string(),
+                example: "Hello, how are you?".to_string(),
+            }],
+        };
+        let json = serde_json::to_string(&response).unwrap();
+
+        // Verify the JSON structure matches what the frontend expects:
+        // { entries: [{ word, phonetic, meaning, example }] }
+        let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+        let entries = parsed["entries"].as_array().unwrap();
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0]["word"], "hello");
+        assert_eq!(entries[0]["phonetic"], "/həˈloʊ/");
+        assert_eq!(entries[0]["meaning"], "used as a greeting");
+        assert_eq!(entries[0]["example"], "Hello, how are you?");
+    }
+
+    #[test]
+    fn test_word_response_multiple_entries() {
+        let response = WordResponse {
+            entries: vec![
+                WordEntry {
+                    word: "hello".to_string(),
+                    phonetic: String::new(),
+                    meaning: "greeting".to_string(),
+                    example: String::new(),
+                },
+                WordEntry {
+                    word: "hello".to_string(),
+                    phonetic: String::new(),
+                    meaning: "an expression of surprise".to_string(),
+                    example: String::new(),
+                },
+            ],
+        };
+        let json = serde_json::to_string(&response).unwrap();
+        let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed["entries"].as_array().unwrap().len(), 2);
+    }
+
+    // --- End-to-end pipeline tests with fake dictionary ---
+
+    /// Simulate the full word-mode pipeline:
+    /// inject fake dict → resolve route → build WordResponse → parse JSON
+    /// This catches regressions where the frontend can't parse the result.
+    #[test]
+    fn test_word_pipeline_dict_hit_produces_valid_frontend_json() {
+        let dict = test_dict_with_word(
+            "hello",
+            "<ul><li>/həˈloʊ/</li><li>used as a greeting</li><li>Hello, world!</li></ul>",
+        );
+        let settings = test_llm_settings();
+
+        // Step 1: resolve route (what the Tauri command does)
+        let route = resolve_translation_route("hello", Some("word"), Some(&dict), &settings);
+        let TranslationRoute::Dictionary(raw) = route.unwrap() else {
+            panic!("Expected Dictionary route");
+        };
+
+        // Step 2: build WordResponse (what the Tauri command does)
+        let plain = strip_html_tags(&raw);
+        let response = WordResponse {
+            entries: vec![WordEntry {
+                word: "hello".to_string(),
+                phonetic: String::new(),
+                meaning: plain,
+                example: String::new(),
+            }],
+        };
+        let translated_text = serde_json::to_string(&response).unwrap();
+
+        // Step 3: parse as frontend would (JSON.parse → WordResponse)
+        let parsed: serde_json::Value = serde_json::from_str(&translated_text)
+            .expect("Frontend JSON.parse should succeed");
+
+        // Verify structure matches the TypeScript WordResponse interface
+        let entries = parsed["entries"].as_array().expect("entries should be array");
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0]["word"].as_str(), Some("hello"));
+        assert!(entries[0]["meaning"].as_str().unwrap().contains("greeting"));
+        assert!(entries[0]["meaning"].as_str().unwrap().contains("/həˈloʊ/"));
+        // No HTML tags in meaning
+        assert!(!entries[0]["meaning"].as_str().unwrap().contains('<'));
+    }
+
+    /// Simulate word-mode miss: dict loaded but word not present
+    #[test]
+    fn test_word_pipeline_dict_miss_returns_clear_error() {
+        let dict = test_dict_with_word("apple", "苹果");
+        let settings = test_llm_settings();
+
+        let route = resolve_translation_route("banana", Some("word"), Some(&dict), &settings);
+
+        let err = route.unwrap_err();
+        assert!(
+            err.contains("Word not found"),
+            "Should explain word was not found, got: {err}"
+        );
+    }
+
+    /// Simulate word-mode with no dictionary available
+    #[test]
+    fn test_word_pipeline_no_dict_returns_clear_error() {
+        let settings = test_llm_settings();
+
+        let route = resolve_translation_route("hello", Some("word"), None, &settings);
+
+        let err = route.unwrap_err();
+        assert!(
+            err.contains("offline dictionary"),
+            "Should mention dictionary requirement, got: {err}"
+        );
+    }
+
+    /// Ensure dictionary lookup + strip_html_tags + JSON roundtrip
+    /// works for Chinese-English content (the real ECDICT use case)
+    #[test]
+    fn test_word_pipeline_chinese_content_html_to_json() {
+        let dict = test_dict_with_word(
+            "apple",
+            "<div><span class=\"phonic\">/ˈæp.əl/</span></div>\
+             <div><font color=\"blue\">n.</font> 苹果</div>\
+             <div>I ate an apple.</div>",
+        );
+        let settings = test_llm_settings();
+
+        let route = resolve_translation_route("apple", Some("word"), Some(&dict), &settings);
+        let TranslationRoute::Dictionary(raw) = route.unwrap() else {
+            panic!("Expected Dictionary route");
+        };
+
+        let plain = strip_html_tags(&raw);
+        let response = WordResponse {
+            entries: vec![WordEntry {
+                word: "apple".to_string(),
+                phonetic: String::new(),
+                meaning: plain,
+                example: String::new(),
+            }],
+        };
+        let json = serde_json::to_string(&response).unwrap();
+
+        // Frontend parse
+        let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+        let meaning = parsed["entries"][0]["meaning"].as_str().unwrap();
+
+        // All content preserved, no HTML
+        assert!(meaning.contains("/ˈæp.əl/"));
+        assert!(meaning.contains("苹果"));
+        assert!(meaning.contains("apple"));
+        assert!(!meaning.contains('<'));
+        assert!(!meaning.contains('>'));
     }
 }
